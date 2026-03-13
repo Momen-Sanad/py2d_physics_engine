@@ -28,6 +28,8 @@ class CircleBodyLike(Protocol):
     def inverse_mass(self) -> float:
         ...
 
+    sleeping: bool
+
 
 def circle_vs_circle(
     a_position: Vec2,
@@ -58,25 +60,45 @@ def resolve_circle_collision(
 ) -> bool:
     """Resolve overlap and velocity response for two circle bodies."""
 
-    contact = circle_vs_circle(
-        a_position=body_a.position,
-        a_radius=body_a.radius,
-        b_position=body_b.position,
-        b_radius=body_b.radius,
-    )
-    if contact is None:
+    position_a = body_a.position
+    position_b = body_b.position
+    dx = position_b.x - position_a.x
+    dy = position_b.y - position_a.y
+    radius_sum = body_a.radius + body_b.radius
+    distance_sq = dx * dx + dy * dy
+    if distance_sq == 0.0:
+        distance = radius_sum
+        normal_x = 1.0
+        normal_y = 0.0
+    else:
+        distance = distance_sq ** 0.5
+        if distance >= radius_sum:
+            return False
+        inverse_distance = 1.0 / distance
+        normal_x = dx * inverse_distance
+        normal_y = dy * inverse_distance
+
+    penetration = radius_sum - distance
+    if penetration <= 0.0:
         return False
 
-    total_inverse_mass = body_a.inverse_mass + body_b.inverse_mass
+    inverse_mass_a = 0.0 if body_a.sleeping else body_a.inverse_mass
+    inverse_mass_b = 0.0 if body_b.sleeping else body_b.inverse_mass
+    total_inverse_mass = inverse_mass_a + inverse_mass_b
     if total_inverse_mass == 0.0:
         return False
 
-    correction = contact.normal * (contact.penetration / total_inverse_mass)
-    body_a.position = body_a.position - correction * body_a.inverse_mass
-    body_b.position = body_b.position + correction * body_b.inverse_mass
+    correction_scale = penetration / total_inverse_mass
+    correction_x = normal_x * correction_scale
+    correction_y = normal_y * correction_scale
+    body_a.position.x -= correction_x * inverse_mass_a
+    body_a.position.y -= correction_y * inverse_mass_a
+    body_b.position.x += correction_x * inverse_mass_b
+    body_b.position.y += correction_y * inverse_mass_b
 
-    relative_velocity = body_b.velocity - body_a.velocity
-    separating_velocity = relative_velocity.dot(contact.normal)
+    relative_velocity_x = body_b.velocity.x - body_a.velocity.x
+    relative_velocity_y = body_b.velocity.y - body_a.velocity.y
+    separating_velocity = relative_velocity_x * normal_x + relative_velocity_y * normal_y
     if separating_velocity > 0.0:
         return True
 
@@ -86,8 +108,11 @@ def resolve_circle_collision(
         else restitution
     )
     impulse_magnitude = -(1.0 + bounce) * separating_velocity / total_inverse_mass
-    impulse = contact.normal * impulse_magnitude
+    impulse_x = normal_x * impulse_magnitude
+    impulse_y = normal_y * impulse_magnitude
 
-    body_a.velocity = body_a.velocity - impulse * body_a.inverse_mass
-    body_b.velocity = body_b.velocity + impulse * body_b.inverse_mass
+    body_a.velocity.x -= impulse_x * inverse_mass_a
+    body_a.velocity.y -= impulse_y * inverse_mass_a
+    body_b.velocity.x += impulse_x * inverse_mass_b
+    body_b.velocity.y += impulse_y * inverse_mass_b
     return True

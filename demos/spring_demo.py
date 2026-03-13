@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from engine.core import SimulationClock
+from engine.debug import PerformanceOverlay
 from engine.math2d import Vec2
-from engine.particle import Particle
-from engine.spring import Spring
+from engine.particle import Particle, step_particles
+from engine.spring import Spring, apply_springs
 
 
 WINDOW_WIDTH = 900
 WINDOW_HEIGHT = 700
-TARGET_FPS = 60
 FIXED_DT = 1.0 / 120.0
 GRAVITY = Vec2(0.0, 900.0)
 LINEAR_DAMPING = 1.2
@@ -78,30 +78,35 @@ def constrain_particle(particle: Particle) -> None:
     if particle.pinned:
         return
 
-    x, y = particle.position.x, particle.position.y
-    vx, vy = particle.velocity.x, particle.velocity.y
+    position = particle.position
+    velocity = particle.velocity
+    radius = particle.radius
+    x = position.x
+    y = position.y
+    vx = velocity.x
+    vy = velocity.y
 
-    if x < particle.radius:
-        x = particle.radius
+    if x < radius:
+        x = radius
         vx = abs(vx) * BOUNCE
-    elif x > WINDOW_WIDTH - particle.radius:
-        x = WINDOW_WIDTH - particle.radius
+    elif x > WINDOW_WIDTH - radius:
+        x = WINDOW_WIDTH - radius
         vx = -abs(vx) * BOUNCE
 
-    if y > WINDOW_HEIGHT - particle.radius:
-        y = WINDOW_HEIGHT - particle.radius
+    if y > WINDOW_HEIGHT - radius:
+        y = WINDOW_HEIGHT - radius
         vy = -abs(vy) * BOUNCE
 
-    particle.position = Vec2(x, y)
-    particle.velocity = Vec2(vx, vy)
+    position.x = x
+    position.y = y
+    velocity.x = vx
+    velocity.y = vy
 
 
 def step_scene(particles: list[Particle], springs: list[Spring], dt: float) -> None:
-    for spring in springs:
-        spring.apply()
-
+    apply_springs(springs)
+    step_particles(particles, dt, gravity=GRAVITY, linear_damping=LINEAR_DAMPING)
     for particle in particles:
-        particle.step(dt, gravity=GRAVITY, linear_damping=LINEAR_DAMPING)
         constrain_particle(particle)
 
 
@@ -113,13 +118,14 @@ def run() -> None:
     pygame.display.set_caption("Spring Net Demo")
     clock = pygame.time.Clock()
     simulation_clock = SimulationClock(fixed_dt=FIXED_DT, max_substeps=5)
+    overlay = PerformanceOverlay()
 
     particles, springs = build_cloth()
     paused = False
     running = True
 
     while running:
-        frame_time = min(clock.tick(TARGET_FPS) / 1000.0, 0.25)
+        frame_time = min(clock.tick() / 1000.0, 0.25)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -153,6 +159,7 @@ def run() -> None:
                 int(particle.radius),
             )
 
+        overlay.draw(screen, frame_time, FIXED_DT)
         pygame.display.flip()
 
     pygame.quit()

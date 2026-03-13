@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Iterable
 
 from .math2d import Vec2
 
@@ -28,7 +29,8 @@ class Particle:
 
     def apply_force(self, applied_force: Vec2) -> None:
         if not self.pinned:
-            self.force += applied_force
+            self.force.x += applied_force.x
+            self.force.y += applied_force.y
 
     def step(
         self,
@@ -43,16 +45,61 @@ class Particle:
             self.clear_forces()
             return
 
-        gravity_force = gravity if gravity is not None else Vec2()
-        acceleration = gravity_force + self.force * self.inverse_mass
-        self.velocity = self.velocity + acceleration * dt
+        inverse_mass = self.inverse_mass
+        gravity_x = 0.0 if gravity is None else gravity.x
+        gravity_y = 0.0 if gravity is None else gravity.y
+
+        velocity = self.velocity
+        force = self.force
+        position = self.position
+
+        velocity.x += (gravity_x + force.x * inverse_mass) * dt
+        velocity.y += (gravity_y + force.y * inverse_mass) * dt
 
         if linear_damping > 0.0:
             damping_factor = max(0.0, 1.0 - linear_damping * dt)
-            self.velocity = self.velocity * damping_factor
+            velocity.x *= damping_factor
+            velocity.y *= damping_factor
 
-        self.position = self.position + self.velocity * dt
+        position.x += velocity.x * dt
+        position.y += velocity.y * dt
         self.clear_forces()
 
     def clear_forces(self) -> None:
-        self.force = Vec2()
+        self.force.reset()
+
+
+def step_particles(
+    particles: Iterable[Particle],
+    dt: float,
+    gravity: Vec2 | None = None,
+    linear_damping: float = 0.0,
+) -> None:
+    """Advance many particles with minimal temporary allocations."""
+
+    gravity_x = 0.0 if gravity is None else gravity.x
+    gravity_y = 0.0 if gravity is None else gravity.y
+    damping_factor = max(0.0, 1.0 - linear_damping * dt) if linear_damping > 0.0 else 1.0
+    use_damping = linear_damping > 0.0
+
+    for particle in particles:
+        particle.lifetime = None if particle.lifetime is None else particle.lifetime - dt
+        if particle.pinned:
+            particle.force.reset()
+            continue
+
+        inverse_mass = particle.inverse_mass
+        velocity = particle.velocity
+        force = particle.force
+        position = particle.position
+
+        velocity.x += (gravity_x + force.x * inverse_mass) * dt
+        velocity.y += (gravity_y + force.y * inverse_mass) * dt
+
+        if use_damping:
+            velocity.x *= damping_factor
+            velocity.y *= damping_factor
+
+        position.x += velocity.x * dt
+        position.y += velocity.y * dt
+        force.reset()

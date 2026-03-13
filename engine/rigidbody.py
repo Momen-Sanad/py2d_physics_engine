@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Iterable
 
 from .math2d import Vec2
 
@@ -35,10 +36,11 @@ class RigidBody2D:
 
     def apply_force(self, applied_force: Vec2) -> None:
         if not self.is_static:
-            self.force += applied_force
+            self.force.x += applied_force.x
+            self.force.y += applied_force.y
 
     def clear_forces(self) -> None:
-        self.force = Vec2()
+        self.force.reset()
         self.torque = 0.0
 
 
@@ -53,6 +55,9 @@ class CircleBody:
     mass: float = 1.0
     restitution: float = 1.0
     is_static: bool = False
+    sleeping: bool = False
+    sleep_timer: float = 0.0
+    contact_count: int = 0
 
     @property
     def inverse_mass(self) -> float:
@@ -62,7 +67,24 @@ class CircleBody:
 
     def apply_force(self, applied_force: Vec2) -> None:
         if not self.is_static:
-            self.force += applied_force
+            if applied_force.x != 0.0 or applied_force.y != 0.0:
+                self.wake()
+            self.force.x += applied_force.x
+            self.force.y += applied_force.y
+
+    def speed_squared(self) -> float:
+        velocity = self.velocity
+        return velocity.x * velocity.x + velocity.y * velocity.y
+
+    def wake(self) -> None:
+        self.sleeping = False
+        self.sleep_timer = 0.0
+
+    def sleep(self) -> None:
+        self.sleeping = True
+        self.sleep_timer = 0.0
+        self.velocity.reset()
+        self.force.reset()
 
     def step(
         self,
@@ -72,20 +94,86 @@ class CircleBody:
     ) -> None:
         """Advance the circle body by one timestep."""
 
-        if self.is_static:
+        if self.is_static or self.sleeping:
             self.clear_forces()
             return
 
-        gravity_force = gravity if gravity is not None else Vec2()
-        acceleration = gravity_force + self.force * self.inverse_mass
-        self.velocity = self.velocity + acceleration * dt
+        gravity_x = 0.0 if gravity is None else gravity.x
+        gravity_y = 0.0 if gravity is None else gravity.y
+        inverse_mass = self.inverse_mass
+        velocity = self.velocity
+        force = self.force
+        position = self.position
+
+        velocity.x += (gravity_x + force.x * inverse_mass) * dt
+        velocity.y += (gravity_y + force.y * inverse_mass) * dt
 
         if linear_damping > 0.0:
             damping_factor = max(0.0, 1.0 - linear_damping * dt)
-            self.velocity = self.velocity * damping_factor
+            velocity.x *= damping_factor
+            velocity.y *= damping_factor
 
-        self.position = self.position + self.velocity * dt
+        position.x += velocity.x * dt
+        position.y += velocity.y * dt
         self.clear_forces()
 
     def clear_forces(self) -> None:
-        self.force = Vec2()
+        self.force.reset()
+
+
+def step_circle_bodies(
+    bodies: Iterable[CircleBody],
+    dt: float,
+    gravity: Vec2 | None = None,
+    linear_damping: float = 0.0,
+) -> None:
+    """Advance many circle bodies with a flat loop."""
+
+    gravity_x = 0.0 if gravity is None else gravity.x
+    gravity_y = 0.0 if gravity is None else gravity.y
+    damping_factor = max(0.0, 1.0 - linear_damping * dt) if linear_damping > 0.0 else 1.0
+    use_damping = linear_damping > 0.0
+
+    for body in bodies:
+        body.contact_count = 0
+        if body.is_static or body.sleeping:
+            body.force.reset()
+            continue
+
+        inverse_mass = body.inverse_mass
+        velocity = body.velocity
+        force = body.force
+        position = body.position
+
+        velocity.x += (gravity_x + force.x * inverse_mass) * dt
+        velocity.y += (gravity_y + force.y * inverse_mass) * dt
+
+        if use_damping:
+            velocity.x *= damping_factor
+            velocity.y *= damping_factor
+
+        position.x += velocity.x * dt
+        position.y += velocity.y * dt
+        force.reset()
+
+
+def update_sleeping(
+    bodies: Iterable[CircleBody],
+    dt: float,
+    linear_speed_threshold: float,
+    sleep_delay: float,
+) -> None:
+    """Put resting bodies to sleep after sustained low-speed contact."""
+
+    threshold_sq = linear_speed_threshold * linear_speed_threshold
+
+    for body in bodies:
+        if body.is_static or body.sleeping:
+            continue
+
+        if body.contact_count > 0 and body.speed_squared() <= threshold_sq:
+            body.sleep_timer += dt
+            if body.sleep_timer >= sleep_delay:
+                body.sleep()
+        else:
+            body.sleep_timer = 0.0

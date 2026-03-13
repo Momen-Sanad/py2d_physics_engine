@@ -6,9 +6,9 @@ from dataclasses import dataclass
 from math import cos, hypot, sin
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class Vec2:
-    """Immutable 2D vector with the operations needed by the engine."""
+    """Mutable 2D vector with helpers for hot-path in-place math."""
 
     x: float = 0.0
     y: float = 0.0
@@ -28,8 +28,28 @@ class Vec2:
     def __neg__(self) -> "Vec2":
         return Vec2(-self.x, -self.y)
 
+    def __iadd__(self, other: "Vec2") -> "Vec2":
+        self.x += other.x
+        self.y += other.y
+        return self
+
+    def __isub__(self, other: "Vec2") -> "Vec2":
+        self.x -= other.x
+        self.y -= other.y
+        return self
+
+    def __imul__(self, scalar: float) -> "Vec2":
+        self.x *= scalar
+        self.y *= scalar
+        return self
+
     def __truediv__(self, scalar: float) -> "Vec2":
         return Vec2(self.x / scalar, self.y / scalar)
+
+    def __itruediv__(self, scalar: float) -> "Vec2":
+        self.x /= scalar
+        self.y /= scalar
+        return self
 
     def dot(self, other: "Vec2") -> float:
         return self.x * other.x + self.y * other.y
@@ -40,8 +60,11 @@ class Vec2:
     def length(self) -> float:
         return hypot(self.x, self.y)
 
+    def length_squared(self) -> float:
+        return self.x * self.x + self.y * self.y
+
     def distance_to(self, other: "Vec2") -> float:
-        return (self - other).length()
+        return hypot(self.x - other.x, self.y - other.y)
 
     def normalized(self) -> "Vec2":
         magnitude = self.length()
@@ -56,6 +79,24 @@ class Vec2:
 
     def perpendicular(self) -> "Vec2":
         return Vec2(-self.y, self.x)
+
+    def set(self, x: float, y: float) -> "Vec2":
+        self.x = x
+        self.y = y
+        return self
+
+    def reset(self) -> "Vec2":
+        self.x = 0.0
+        self.y = 0.0
+        return self
+
+    def add_scaled(self, other: "Vec2", scalar: float) -> "Vec2":
+        self.x += other.x * scalar
+        self.y += other.y * scalar
+        return self
+
+    def copy(self) -> "Vec2":
+        return Vec2(self.x, self.y)
 
     def to_tuple(self) -> tuple[float, float]:
         return (self.x, self.y)

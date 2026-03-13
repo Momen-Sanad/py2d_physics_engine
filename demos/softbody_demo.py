@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from engine.core import SimulationClock
+from engine.debug import PerformanceOverlay
 from engine.math2d import Vec2
 from engine.softbody import SoftBody
 
 
 WINDOW_WIDTH = 700
 WINDOW_HEIGHT = 700
-TARGET_FPS = 60
 FIXED_DT = 1.0 / 120.0
 GRAVITY = Vec2(0.0, 700.0)
 LINEAR_DAMPING = 0.02
@@ -33,7 +33,6 @@ def build_softbody() -> SoftBody:
 def constrain_particles(softbody: SoftBody, dt: float) -> None:
     particles = softbody.particles
 
-    #local attribute lookup for performance (faster than global macros)
     bounce = BOUNCE
     width = WINDOW_WIDTH
     height = WINDOW_HEIGHT
@@ -41,10 +40,12 @@ def constrain_particles(softbody: SoftBody, dt: float) -> None:
 
     for particle in particles:
         r = particle.radius
-        x = particle.position.x
-        y = particle.position.y
-        vx = particle.velocity.x
-        vy = particle.velocity.y
+        position = particle.position
+        velocity = particle.velocity
+        x = position.x
+        y = position.y
+        vx = velocity.x
+        vy = velocity.y
 
         right = width - r
         bottom = height - r
@@ -64,8 +65,17 @@ def constrain_particles(softbody: SoftBody, dt: float) -> None:
             vy = -abs(vy) * bounce
             vx *= friction_step
 
-        particle.position = Vec2(x, y)
-        particle.velocity = Vec2(vx, vy)
+        position.x = x
+        position.y = y
+        velocity.x = vx
+        velocity.y = vy
+
+
+def fill_polygon_buffer(softbody: SoftBody, point_buffer: list[list[float]]) -> None:
+    particles = softbody.particles
+    for index, particle in enumerate(particles):
+        point_buffer[index][0] = particle.position.x
+        point_buffer[index][1] = particle.position.y
 
 
 def run() -> None:
@@ -76,13 +86,15 @@ def run() -> None:
     pygame.display.set_caption("Soft Body Demo")
     clock = pygame.time.Clock()
     simulation_clock = SimulationClock(fixed_dt=FIXED_DT, max_substeps=5)
+    overlay = PerformanceOverlay()
 
     softbody = build_softbody()
+    point_buffer = [[0.0, 0.0] for _ in range(len(softbody.particles))]
     paused = False
     running = True
 
     while running:
-        frame_time = min(clock.tick(TARGET_FPS) / 1000.0, 0.25)
+        frame_time = min(clock.tick() / 1000.0, 0.25)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -90,6 +102,7 @@ def run() -> None:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
                     softbody = build_softbody()
+                    point_buffer = [[0.0, 0.0] for _ in range(len(softbody.particles))]
                 elif event.key == pygame.K_SPACE:
                     paused = not paused
 
@@ -99,9 +112,9 @@ def run() -> None:
                 constrain_particles(softbody, FIXED_DT)
 
         screen.fill((250, 250, 245))
-        points = [particle.position.to_tuple() for particle in softbody.particles]
-        if len(points) >= 3:
-            pygame.draw.polygon(screen, (186, 219, 204), points)
+        fill_polygon_buffer(softbody, point_buffer)
+        if len(point_buffer) >= 3:
+            pygame.draw.polygon(screen, (186, 219, 204), point_buffer)
 
         for spring in softbody.springs:
             pygame.draw.line(
@@ -120,6 +133,7 @@ def run() -> None:
                 int(particle.radius),
             )
 
+        overlay.draw(screen, frame_time, FIXED_DT)
         pygame.display.flip()
 
     pygame.quit()

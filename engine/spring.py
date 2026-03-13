@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import hypot
+from typing import Iterable
 
 from .math2d import Vec2
 from .particle import Particle
@@ -27,15 +29,18 @@ class Spring:
         damping: float = 0.0,
         rest_length: float | None = None,
     ) -> "Spring":
-        natural_length = (
-            particle_a.position.distance_to(particle_b.position)
-            if rest_length is None
-            else rest_length
-        )
+        if rest_length is None:
+            dx = particle_b.position.x - particle_a.position.x
+            dy = particle_b.position.y - particle_a.position.y
+            natural_length = hypot(dx, dy)
+        else:
+            natural_length = rest_length
         return cls(particle_a, particle_b, natural_length, stiffness, damping)
 
     def length(self) -> float:
-        return self.particle_a.position.distance_to(self.particle_b.position)
+        dx = self.particle_b.position.x - self.particle_a.position.x
+        dy = self.particle_b.position.y - self.particle_a.position.y
+        return hypot(dx, dy)
 
     def force(self) -> tuple[Vec2, Vec2]:
         return spring_force(
@@ -49,15 +54,48 @@ class Spring:
         )
 
     def normal(self) -> Vec2:
-        edge = self.particle_b.position - self.particle_a.position
-        if edge.length() == 0.0:
+        dx = self.particle_b.position.x - self.particle_a.position.x
+        dy = self.particle_b.position.y - self.particle_a.position.y
+        distance = hypot(dx, dy)
+        if distance == 0.0:
             return Vec2()
-        return Vec2(edge.y, -edge.x).normalized()
+        inverse_distance = 1.0 / distance
+        return Vec2(dy * inverse_distance, -dx * inverse_distance)
 
     def apply(self) -> None:
-        force_a, force_b = self.force()
-        self.particle_a.apply_force(force_a)
-        self.particle_b.apply_force(force_b)
+        particle_a = self.particle_a
+        particle_b = self.particle_b
+        dx = particle_b.position.x - particle_a.position.x
+        dy = particle_b.position.y - particle_a.position.y
+        distance_sq = dx * dx + dy * dy
+        if distance_sq == 0.0:
+            return
+
+        distance = hypot(dx, dy)
+        inverse_distance = 1.0 / distance
+        normal_x = dx * inverse_distance
+        normal_y = dy * inverse_distance
+
+        relative_velocity_x = particle_b.velocity.x - particle_a.velocity.x
+        relative_velocity_y = particle_b.velocity.y - particle_a.velocity.y
+        spring_term = self.stiffness * (distance - self.rest_length)
+        damping_term = self.damping * (
+            relative_velocity_x * normal_x + relative_velocity_y * normal_y
+        )
+        force_x = normal_x * (spring_term + damping_term)
+        force_y = normal_y * (spring_term + damping_term)
+
+        particle_a.force.x += force_x
+        particle_a.force.y += force_y
+        particle_b.force.x -= force_x
+        particle_b.force.y -= force_y
+
+
+def apply_springs(springs: Iterable[Spring]) -> None:
+    """Apply spring forces with a flat loop to reduce Python call overhead."""
+
+    for spring in springs:
+        spring.apply()
 
 
 def spring_force(
