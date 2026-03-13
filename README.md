@@ -31,12 +31,14 @@ Planned physics modules:
 |   |-- constraints.py
 |   |-- particle.py
 |   |-- spring.py
+|   |-- softbody.py
 |   |-- pbd.py
 |   |-- rigidbody.py
 |   |-- kinematics.py
 |-- demos/
 |   |-- particle_demo.py
 |   |-- spring_demo.py
+|   |-- softbody_demo.py
 |   |-- pbd_demo.py
 |   |-- rigidbody_demo.py
 |   |-- kinematics_demo.py
@@ -47,13 +49,12 @@ Planned physics modules:
 
 ## Current Status
 
-The repository is scaffolded with:
+The repository now includes:
 
 1. Shared engine modules
-2. Placeholder demo modules
-3. A documented implementation pipeline
-
-The actual runnable simulation scenes are still to be implemented.
+2. Extracted spring-net and soft-body systems from older references
+3. Extracted circle collision logic for the rigid-body side
+4. A documented implementation pipeline
 
 ## Getting Started
 
@@ -68,6 +69,14 @@ pip install -r requirements.txt
 
 ```bash
 python main.py
+```
+
+You can also launch a specific extracted demo:
+
+```bash
+python main.py spring
+python main.py softbody
+python main.py rigidbody
 ```
 
 ## Recommended Build Order

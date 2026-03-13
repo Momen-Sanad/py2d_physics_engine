@@ -30,6 +30,7 @@ project/
     constraints.py
     particle.py
     spring.py
+    softbody.py
     pbd.py
     rigidbody.py
     kinematics.py
@@ -38,12 +39,22 @@ project/
     base_demo.py
     particle_demo.py
     spring_demo.py
+    softbody_demo.py
     pbd_demo.py
     rigidbody_demo.py
     kinematics_demo.py
   docs/
     PHYSICS_ENGINE_PIPELINE.md
 ```
+
+## Extracted Reference Systems
+
+The repo now has working systems extracted from your older code:
+
+1. A falling spring-net demo in `demos/spring_demo.py`
+2. A pressure-based soft-body demo in `demos/softbody_demo.py`
+3. Circle collision handling in `engine/collisions.py`
+4. A circle rigid-body demo in `demos/rigidbody_demo.py`
 
 ## Development Rules
 

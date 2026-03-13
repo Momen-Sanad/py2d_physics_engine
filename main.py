@@ -1,13 +1,38 @@
-"""Entry point for the 2D physics engine workspace.
+"""Simple demo launcher for 2D physics systems."""
 
-The game layer is intentionally deferred. Use this scaffold to build the
-physics systems as standalone demos first.
-"""
+from __future__ import annotations
+
+from importlib import import_module
+import sys
 
 
-def main() -> None:
-    print("2D physics engine scaffold created.")
-    print("Next: follow docs/PHYSICS_ENGINE_PIPELINE.md and implement demos in order.")
+DEMO_MODULES = {
+    "spring": "demos.spring_demo",
+    "softbody": "demos.softbody_demo",
+    "rigidbody": "demos.rigidbody_demo",
+}
+
+
+def launch_demo(name: str) -> None:
+    module_path = DEMO_MODULES.get(name)
+    if module_path is None:
+        available = ", ".join(sorted(DEMO_MODULES))
+        raise SystemExit(f"Unknown demo '{name}'. Available demos: {available}")
+
+    module = import_module(module_path)
+    module.run()
+
+
+def main(argv: list[str] | None = None) -> None:
+    args = list(sys.argv[1:] if argv is None else argv)
+
+    if args and args[0] in {"-h", "--help", "help"}:
+        available = ", ".join(sorted(DEMO_MODULES))
+        print(f"Usage: python main.py [demo]\nAvailable demos: {available}")
+        return
+
+    demo_name = args[0] if args else "spring"
+    launch_demo(demo_name)
 
 
 if __name__ == "__main__":

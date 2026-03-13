@@ -25,14 +25,23 @@ class Vec2:
     def __rmul__(self, scalar: float) -> "Vec2":
         return self * scalar
 
+    def __neg__(self) -> "Vec2":
+        return Vec2(-self.x, -self.y)
+
     def __truediv__(self, scalar: float) -> "Vec2":
         return Vec2(self.x / scalar, self.y / scalar)
 
     def dot(self, other: "Vec2") -> float:
         return self.x * other.x + self.y * other.y
 
+    def cross(self, other: "Vec2") -> float:
+        return self.x * other.y - self.y * other.x
+
     def length(self) -> float:
         return hypot(self.x, self.y)
+
+    def distance_to(self, other: "Vec2") -> float:
+        return (self - other).length()
 
     def normalized(self) -> "Vec2":
         magnitude = self.length()
