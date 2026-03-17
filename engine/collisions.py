@@ -1,4 +1,4 @@
-"""Basic 2D collision helpers for early rigid-body demos."""
+"""Basic 2D collision helpers"""
 
 from __future__ import annotations
 
