@@ -7,6 +7,7 @@ import sys
 
 
 DEMO_MODULES = {
+    "particle": "demos.particle_demo",
     "spring": "demos.spring_demo",
     "softbody": "demos.softbody_demo",
     "rigidbody": "demos.rigidbody_demo",
