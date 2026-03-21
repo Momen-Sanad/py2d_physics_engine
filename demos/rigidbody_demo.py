@@ -15,16 +15,25 @@ from engine.rigidbody import CircleBody, step_circle_bodies, update_sleeping
 WINDOW_WIDTH = 900
 WINDOW_HEIGHT = 650
 FIXED_DT = 1.0 / 120.0
+
+# Normal behavior preset:
 GRAVITY = Vec2(0.0, 900.0)
 LINEAR_DAMPING = 0.05
 FLOOR_FRICTION = 6.0
-BODY_COUNT = 200
-BODY_RADIUS = 8.0
 BODY_RESTITUTION = 0.92
-BODY_SPACING = 20.0
-SPAWN_TOP = 50.0
-BROADPHASE_CELL_SIZE = 32.0
+
+# Endless bouncy preset:
+# GRAVITY = Vec2(0.0, 750.0)
+# LINEAR_DAMPING = 0.0
+# FLOOR_FRICTION = 0.0
+# BODY_RESTITUTION = 1.0
+
+BODY_COUNT = 500
 SLEEP_ENABLED = True
+BODY_RADIUS = 6.0
+BODY_SPACING = 40.0
+SPAWN_TOP = 30.0
+BROADPHASE_CELL_SIZE = 32.0
 SLEEP_SPEED_THRESHOLD = 35.0
 SLEEP_DELAY = 0.75
 WAKE_SPEED_THRESHOLD = 65.0
@@ -191,3 +200,5 @@ def run() -> None:
         pygame.display.flip()
 
     pygame.quit()
+
+
