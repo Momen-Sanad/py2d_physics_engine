@@ -73,6 +73,44 @@ You can also inspect available options:
 python main.py --help
 ```
 
+## Demo Media
+
+Live capture previews from `captures/`:
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="captures/particle_20260420_150431_638548.gif" alt="Particle Demo" width="460" />
+    </td>
+    <td align="center">
+      <img src="captures/spring_20260420_150012_788560.gif" alt="Spring Demo" width="460" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><em>Particle Demo: emitter, forces, and lifetime behavior.</em></td>
+    <td align="center"><em>Spring Demo: mass-spring cloth-like net simulation.</em></td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="captures/softbody_20260420_145947_770496.gif" alt="Softbody Demo" width="460" />
+    </td>
+    <td align="center">
+      <img src="captures/rigidbody_20260420_145913_278522.gif" alt="Rigidbody Demo" width="460" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><em>Softbody Demo: pressure + spring deformation.</em></td>
+    <td align="center"><em>Rigidbody Demo: circle collisions with broadphase acceleration.</em></td>
+  </tr>
+</table>
+
+Media files:
+
+- `captures/particle_20260420_150431_638548.gif`
+- `captures/spring_20260420_150012_788560.gif`
+- `captures/softbody_20260420_145947_770496.gif`
+- `captures/rigidbody_20260420_145913_278522.gif`
+
 ## Demo Guide
 
 ### Particle Demo (`python main.py particle`)
