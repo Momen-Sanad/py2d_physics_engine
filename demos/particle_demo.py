@@ -10,6 +10,7 @@ from engine.debug import PerformanceOverlay
 from engine.forces import drag_force
 from engine.math2d import Vec2
 from engine.particle import Particle, step_particles
+from media_capture import CaptureController
 
 
 WINDOW_WIDTH = 980
@@ -235,6 +236,7 @@ def run() -> None:
     simulation_clock = SimulationClock(fixed_dt=FIXED_DT, max_substeps=8)
     overlay = PerformanceOverlay(font_size=20, update_interval=0.35)
     help_font = pygame.font.Font(None, 22)
+    capture = CaptureController(demo_name="particle")
 
     rng = Random(7)
     particles: list[Particle] = []
@@ -272,6 +274,8 @@ def run() -> None:
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN:
+                if capture.handle_keydown(event, screen):
+                    continue
                 if event.key == pygame.K_ESCAPE:
                     running = False
                 elif event.key == pygame.K_SPACE:
@@ -404,21 +408,23 @@ def run() -> None:
             / moving_count
         )
         damping_step_factor = max(0.0, 1.0 - LINEAR_DAMPING * FIXED_DT)
+        overlay_lines = [
+            f"Particles: {len(particles)}/{MAX_PARTICLES}",
+            f"Emitter: {EMITTER_MODES[emitter_mode]} @ {emit_rate:.0f}/s",
+            f"Modes: color={COLOR_MODES[color_mode]} draw={DRAW_MODES[draw_mode]} bg={theme_name}",
+            f"Forces: gravity={gravity_enabled} wind={wind_enabled}",
+            f"Damping(D): enabled={damping_enabled} c={LINEAR_DAMPING:.2f} step={damping_step_factor:.4f}",
+            f"Drag(F): enabled={drag_enabled} c={AIR_DRAG:.2f} (opposes velocity)",
+            f"Wind X: {wind_strength:+.0f}  Lifetime Scale: {lifetime_scale:.2f}",
+            f"Avg speed: {avg_speed:.1f}",
+            f"Pinned: {pinned_count} (spawn pin mode={pin_mode})",
+        ]
+        overlay_lines.extend(capture.overlay_lines())
         overlay.draw(
             screen,
             frame_time,
             FIXED_DT,
-            extra_lines=[
-                f"Particles: {len(particles)}/{MAX_PARTICLES}",
-                f"Emitter: {EMITTER_MODES[emitter_mode]} @ {emit_rate:.0f}/s",
-                f"Modes: color={COLOR_MODES[color_mode]} draw={DRAW_MODES[draw_mode]} bg={theme_name}",
-                f"Forces: gravity={gravity_enabled} wind={wind_enabled}",
-                f"Damping(D): enabled={damping_enabled} c={LINEAR_DAMPING:.2f} step={damping_step_factor:.4f}",
-                f"Drag(F): enabled={drag_enabled} c={AIR_DRAG:.2f} (opposes velocity)",
-                f"Wind X: {wind_strength:+.0f}  Lifetime Scale: {lifetime_scale:.2f}",
-                f"Avg speed: {avg_speed:.1f}",
-                f"Pinned: {pinned_count} (spawn pin mode={pin_mode})",
-            ],
+            extra_lines=overlay_lines,
         )
 
         if show_help:
@@ -426,13 +432,14 @@ def run() -> None:
                 screen,
                 help_font,
                 [
-                    "LMB: move emitter  X: burst  SPACE: pause  R: reset  ESC: quit",
+                    "LMB: move emitter  X: burst  TAB: screenshot  `: GIF  SPACE: pause  R: reset  ESC: quit",
                     "E: emitter mode  C: color mode  V: draw mode  B: background  T: trails  H: hide help",
                     "G: gravity  D: linear damping  F: drag force  W: wind on/off  LEFT/RIGHT: wind strength",
                     "UP/DOWN: emission rate  [: size-  ] or /: size+  -/=: lifetime scale  P: spawn pinned particles",
                 ],
             )
 
+        capture.update(screen, frame_time)
         pygame.display.flip()
 
     pygame.quit()
@@ -440,4 +447,3 @@ def run() -> None:
 
 if __name__ == "__main__":
     run()
-
