@@ -13,6 +13,19 @@ The short-term goal is to build a clean engine with standalone demos for:
 5. Forward kinematics (FK)
 6. Inverse kinematics (IK)
 
+## Current Implementation Snapshot (2026-04-20)
+
+| Area | Status | Evidence |
+|---|---|---|
+| Engine core (loop/timing/math/integrators/forces/collisions/constraints) | Implemented | `engine/core.py`, `engine/math2d.py`, `engine/integrators.py`, `engine/forces.py`, `engine/collisions.py`, `engine/constraints.py` |
+| Particle system | Implemented demo | `demos/particle_demo.py` + launcher key `particle` |
+| Mass-spring system | Implemented demo | `demos/spring_demo.py`, `engine/spring.py` |
+| Pressure soft body | Implemented demo | `demos/softbody_demo.py`, `engine/softbody.py` |
+| Rigid body dynamics | Implemented demo | `demos/rigidbody_demo.py`, `engine/rigidbody.py`, `engine/broadphase.py` |
+| PBD | Scaffolded only | `engine/pbd.py`, `demos/pbd_demo.py` placeholder |
+| FK | Scaffolded helper only | `engine/kinematics.py` (`forward_chain`) |
+| IK | Not implemented | No IK solver/demo integrated yet |
+
 ## File Structure
 
 ```text
@@ -49,12 +62,13 @@ project/
 
 ## Extracted Reference Systems
 
-The repo now has working systems extracted from your older code:
+The repo currently has these runnable and scaffolded systems:
 
-1. A falling spring-net demo in `demos/spring_demo.py`
-2. A pressure-based soft-body demo in `demos/softbody_demo.py`
-3. Circle collision handling in `engine/collisions.py`
-4. A circle rigid-body demo in `demos/rigidbody_demo.py`
+1. Interactive particle playground in `demos/particle_demo.py`
+2. Falling spring-net demo in `demos/spring_demo.py`
+3. Pressure-based soft-body demo in `demos/softbody_demo.py`
+4. Circle rigid-body demo with broadphase in `demos/rigidbody_demo.py`
+5. PBD/FK module scaffolding in `engine/pbd.py` and `engine/kinematics.py`
 
 ## Development Rules
 
@@ -73,7 +87,7 @@ Keep these rules from the start:
 
 ## Recommended Build Order
 
-### Stage 1: foundation
+### Stage 1: foundation (implemented)
 
 Build this first:
 
@@ -89,7 +103,7 @@ Definition of done:
 2. Shared math utilities are available to every module.
 3. There is one place for gravity, solver iterations, and timing settings.
 
-### Stage 2: particle system
+### Stage 2: particle system (implemented)
 
 Build next:
 
@@ -106,7 +120,7 @@ Definition of done:
 2. Gravity and drag visibly affect motion.
 3. You can reset the scene and spawn bursts.
 
-### Stage 3: mass-spring system
+### Stage 3: mass-spring system (implemented)
 
 Build after particles:
 
@@ -123,7 +137,7 @@ Definition of done:
 2. Stiffness and damping are adjustable.
 3. The spring network does not explode immediately under gravity.
 
-### Stage 4: PBD
+### Stage 4: PBD (scaffolded, not complete)
 
 Build after the spring demo:
 
@@ -139,7 +153,7 @@ Definition of done:
 2. Constraint iterations can be tuned.
 3. Pin constraints or ground constraints work.
 
-### Stage 5: rigid body dynamics
+### Stage 5: rigid body dynamics (implemented)
 
 Build after PBD:
 
@@ -156,7 +170,7 @@ Definition of done:
 2. Resting and bouncing behavior are at least believable.
 3. You can spawn or launch rigid bodies in a demo scene.
 
-### Stage 6: kinematics
+### Stage 6: kinematics (FK scaffolded, IK pending)
 
 Build after rigid bodies:
 
@@ -171,7 +185,7 @@ Definition of done:
 2. The end effector can reach toward a target using IK.
 3. Segment lengths stay fixed.
 
-### Stage 7: engine cleanup
+### Stage 7: engine cleanup (in progress)
 
 Do this before any game work:
 
@@ -189,7 +203,7 @@ Definition of done:
 
 ## Step-by-Step Working Plan
 
-Use this order during development:
+development order:
 
 1. Finish `math2d.py`.
 2. Finish `core.py` and fixed timestep management.
@@ -201,6 +215,13 @@ Use this order during development:
 8. Add FK chain rendering and controls.
 9. Add IK solver.
 10. Refactor shared helpers into reusable engine code.
+
+Remaining order from the current repo state:
+
+1. Finish full PBD module + runnable demo.
+2. Build a dedicated FK demo scene.
+3. Add IK solver + target-driven demo behavior.
+4. Continue engine cleanup/tests/docs polish.
 
 ## Suggested Weekly Breakdown
 
@@ -228,22 +249,3 @@ Use this order during development:
 
 1. Finish kinematics demo
 2. Refactor and clean engine interfaces
-
-## Immediate Next Tasks
-
-If you start coding right now, do this:
-
-1. Install dependencies from `requirements.txt`.
-2. Build a tiny window loop and frame timer.
-3. Connect the fixed timestep to one empty demo scene.
-4. Make the particle demo the first truly runnable module.
-5. Do not start rigid bodies until particles and springs are stable.
-
-## What Not To Do Yet
-
-Avoid these until the engine demos are stable:
-
-1. Do not build gameplay rules yet.
-2. Do not add menus beyond a simple demo selector.
-3. Do not attempt full 3D rendering.
-4. Do not mix rendering code into the physics module logic.

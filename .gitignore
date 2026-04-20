@@ -3,3 +3,6 @@ __pycache__/
 .venv/
 .tmp_pypdf/
 refrences/
+docs/First_Phase.pdf
+docs/Second_Phase.pdf
+docs/generate_phase_pdfs.py
