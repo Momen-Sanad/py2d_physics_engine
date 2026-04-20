@@ -10,6 +10,7 @@ from engine.core import SimulationClock
 from engine.debug import PerformanceOverlay
 from engine.math2d import Vec2
 from engine.rigidbody import CircleBody, step_circle_bodies, update_sleeping
+from media_capture import CaptureController
 
 
 WINDOW_WIDTH = 900
@@ -159,6 +160,7 @@ def run() -> None:
     clock = pygame.time.Clock()
     simulation_clock = SimulationClock(fixed_dt=FIXED_DT, max_substeps=5)
     overlay = PerformanceOverlay()
+    capture = CaptureController(demo_name="rigidbody")
 
     bodies = build_bodies()
     broadphase = SpatialHashGrid(cell_size=BROADPHASE_CELL_SIZE)
@@ -172,7 +174,11 @@ def run() -> None:
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_r:
+                if capture.handle_keydown(event, screen):
+                    continue
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+                elif event.key == pygame.K_r:
                     bodies = build_bodies()
                 elif event.key == pygame.K_SPACE:
                     paused = not paused
@@ -191,14 +197,19 @@ def run() -> None:
             )
 
         sleeping_count = sum(1 for body in bodies if body.sleeping)
+        overlay_lines = [f"Sleeping: {sleeping_count}/{len(bodies)}"]
+        overlay_lines.extend(capture.overlay_lines())
         overlay.draw(
             screen,
             frame_time,
             FIXED_DT,
-            extra_lines=[f"Sleeping: {sleeping_count}/{len(bodies)}"],
+            extra_lines=overlay_lines,
         )
+        capture.update(screen, frame_time)
         pygame.display.flip()
 
     pygame.quit()
 
 
+if __name__ == "__main__":
+    run()
