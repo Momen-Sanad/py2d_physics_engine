@@ -6,6 +6,7 @@ from engine.core import SimulationClock
 from engine.debug import PerformanceOverlay
 from engine.math2d import Vec2
 from engine.softbody import SoftBody
+from media_capture import CaptureController
 
 
 WINDOW_WIDTH = 700
@@ -87,6 +88,7 @@ def run() -> None:
     clock = pygame.time.Clock()
     simulation_clock = SimulationClock(fixed_dt=FIXED_DT, max_substeps=5)
     overlay = PerformanceOverlay()
+    capture = CaptureController(demo_name="softbody")
 
     softbody = build_softbody()
     point_buffer = [[0.0, 0.0] for _ in range(len(softbody.particles))]
@@ -100,7 +102,11 @@ def run() -> None:
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_r:
+                if capture.handle_keydown(event, screen):
+                    continue
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+                elif event.key == pygame.K_r:
                     softbody = build_softbody()
                     point_buffer = [[0.0, 0.0] for _ in range(len(softbody.particles))]
                 elif event.key == pygame.K_SPACE:
@@ -133,7 +139,17 @@ def run() -> None:
                 int(particle.radius),
             )
 
-        overlay.draw(screen, frame_time, FIXED_DT)
+        overlay.draw(
+            screen,
+            frame_time,
+            FIXED_DT,
+            extra_lines=capture.overlay_lines(),
+        )
+        capture.update(screen, frame_time)
         pygame.display.flip()
 
     pygame.quit()
+
+
+if __name__ == "__main__":
+    run()
