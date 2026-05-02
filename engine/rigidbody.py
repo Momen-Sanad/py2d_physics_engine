@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Iterable
 
+from .math3d import Mat3, Quaternion, Vec3
 from .math2d import Vec2
 
 
@@ -42,6 +43,101 @@ class RigidBody2D:
     def clear_forces(self) -> None:
         self.force.reset()
         self.torque = 0.0
+
+
+@dataclass(slots=True)
+class RigidBody3D:
+    """Torque-driven rigid body in principal/body frame coordinates."""
+
+    position: Vec3
+    velocity: Vec3 = field(default_factory=Vec3)
+    force: Vec3 = field(default_factory=Vec3)
+    orientation: Quaternion = field(default_factory=Quaternion)
+    angular_velocity: Vec3 = field(default_factory=Vec3)
+    torque: Vec3 = field(default_factory=Vec3)
+    mass: float = 1.0
+    inertia_body: Mat3 = field(default_factory=Mat3.identity)
+    linear_damping: float = 0.0
+    angular_damping: float = 0.0
+    is_static: bool = False
+
+    @property
+    def inverse_mass(self) -> float:
+        if self.is_static or self.mass == 0.0:
+            return 0.0
+        return 1.0 / self.mass
+
+    @property
+    def inverse_inertia_body(self) -> Mat3:
+        if self.is_static:
+            return Mat3.zero()
+        try:
+            return self.inertia_body.inverse()
+        except ValueError:
+            return Mat3.zero()
+
+    def rotation_matrix(self) -> Mat3:
+        return self.orientation.to_rotation_matrix()
+
+    def angular_momentum(self) -> Vec3:
+        return self.inertia_body @ self.angular_velocity
+
+    def angular_acceleration(self) -> Vec3:
+        angular_momentum = self.angular_momentum()
+        gyroscopic_term = self.angular_velocity.cross(angular_momentum)
+        return self.inverse_inertia_body @ (self.torque - gyroscopic_term)
+
+    def apply_force(self, applied_force: Vec3) -> None:
+        if not self.is_static:
+            self.force += applied_force
+
+    def apply_torque(self, applied_torque: Vec3) -> None:
+        if not self.is_static:
+            self.torque += applied_torque
+
+    def apply_force_at_point(self, applied_force: Vec3, world_point: Vec3) -> None:
+        if self.is_static:
+            return
+
+        lever_arm = world_point - self.position
+        self.force += applied_force
+        self.torque += lever_arm.cross(applied_force)
+
+    def step(self, dt: float, gravity: Vec3 | None = None) -> None:
+        """Advance linear and rotational state with semi-implicit Euler."""
+
+        if self.is_static:
+            self.clear_forces()
+            return
+
+        inverse_mass = self.inverse_mass
+        acceleration = self.force * inverse_mass
+        if gravity is not None:
+            acceleration += gravity
+
+        self.velocity.add_scaled(acceleration, dt)
+        if self.linear_damping > 0.0:
+            self.velocity *= max(0.0, 1.0 - self.linear_damping * dt)
+        self.position.add_scaled(self.velocity, dt)
+
+        alpha = self.angular_acceleration()
+        self.angular_velocity.add_scaled(alpha, dt)
+        if self.angular_damping > 0.0:
+            self.angular_velocity *= max(0.0, 1.0 - self.angular_damping * dt)
+
+        omega_q = Quaternion(
+            0.0,
+            self.angular_velocity.x,
+            self.angular_velocity.y,
+            self.angular_velocity.z,
+        )
+        dq_dt = self.orientation * omega_q * 0.5
+        self.orientation = (self.orientation + dq_dt * dt).normalize()
+        self.clear_forces()
+
+    def clear_forces(self) -> None:
+        self.force.reset()
+        self.torque.reset()
 
 
 @dataclass(slots=True)
