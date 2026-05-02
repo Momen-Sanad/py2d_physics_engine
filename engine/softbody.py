@@ -1,3 +1,8 @@
+# <file>
+# <summary>
+# Pressure-based soft-body helpers built from particles and springs.
+# </summary>
+# </file>
 """Pressure-based soft-body helpers built from particles and springs."""
 
 from __future__ import annotations
@@ -10,6 +15,11 @@ from .particle import Particle, step_particles
 from .spring import Spring
 
 
+# <summary>
+# Return polygon area directly from particle positions without list copies.
+# </summary>
+# <param name="particles">Particle collection being read or updated.</param>
+# <returns>Computed result described by the return type annotation.</returns>
 def polygon_area_from_particles(particles: list[Particle]) -> float:
     """Return polygon area directly from particle positions without list copies."""
 
@@ -26,6 +36,9 @@ def polygon_area_from_particles(particles: list[Particle]) -> float:
     return abs(area_sum) * 0.5
 
 
+# <summary>
+# Closed spring loop with a simple internal pressure term.
+# </summary>
 @dataclass(slots=True)
 class SoftBody:
     """Closed spring loop with a simple internal pressure term."""
@@ -35,6 +48,18 @@ class SoftBody:
     pressure_coefficient: float
     initial_area: float
 
+    # <summary>
+    # Build a circular pressure soft-body from particles and perimeter springs.
+    # </summary>
+    # <param name="center">Input value for center.</param>
+    # <param name="radius">Radius value used by the geometry or physics calculation.</param>
+    # <param name="particle_count">Input value for particle count.</param>
+    # <param name="particle_mass">Input value for particle mass.</param>
+    # <param name="particle_radius">Input value for particle radius.</param>
+    # <param name="stiffness">Input value for stiffness.</param>
+    # <param name="damping">Input value for damping.</param>
+    # <param name="pressure_coefficient">Input value for pressure coefficient.</param>
+    # <returns>Computed result described by the return type annotation.</returns>
     @classmethod
     def circle(
         cls,
@@ -77,9 +102,19 @@ class SoftBody:
             initial_area=polygon_area_from_particles(particles),
         )
 
+    # <summary>
+    # Return the current enclosed polygon area.
+    # </summary>
+    # <returns>Computed result described by the return type annotation.</returns>
     def area(self) -> float:
         return polygon_area_from_particles(self.particles)
 
+    # <summary>
+    # Apply pressure and spring forces, then integrate the soft-body particles.
+    # </summary>
+    # <param name="dt">Simulation timestep in seconds.</param>
+    # <param name="gravity">Optional gravity acceleration vector.</param>
+    # <param name="linear_damping">Linear damping coefficient applied during integration.</param>
     def step(
         self,
         dt: float,

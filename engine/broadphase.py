@@ -1,3 +1,8 @@
+# <file>
+# <summary>
+# Broadphase utilities for reducing collision candidate counts.
+# </summary>
+# </file>
 """Broadphase utilities for reducing collision candidate counts."""
 
 from __future__ import annotations
@@ -9,6 +14,9 @@ from typing import Iterable
 from .rigidbody import CircleBody
 
 
+# <summary>
+# Uniform-grid broadphase that preserves circle collision candidates.
+# </summary>
 @dataclass(slots=True)
 class SpatialHashGrid:
     """Uniform-grid broadphase that preserves circle collision candidates."""
@@ -17,6 +25,10 @@ class SpatialHashGrid:
     buckets: dict[tuple[int, int], list[int]] = field(default_factory=dict)
     pair_buffer: set[tuple[int, int]] = field(default_factory=set)
 
+    # <summary>
+    # Insert each circle into every cell touched by its AABB.
+    # </summary>
+    # <param name="bodies">Rigid body collection being read or updated.</param>
     def rebuild_circles(self, bodies: Iterable[CircleBody]) -> None:
         """Insert each circle into every cell touched by its AABB."""
 
@@ -40,6 +52,10 @@ class SpatialHashGrid:
                     else:
                         cell.append(index)
 
+    # <summary>
+    # Yield unique candidate pairs from occupied cells.
+    # </summary>
+    # <returns>Computed result described by the return type annotation.</returns>
     def iter_pairs(self) -> Iterable[tuple[int, int]]:
         """Yield unique candidate pairs from occupied cells."""
 

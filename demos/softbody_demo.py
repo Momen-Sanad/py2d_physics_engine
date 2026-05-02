@@ -1,3 +1,8 @@
+# <file>
+# <summary>
+# Pressure-ball demo extracted from the old soft-ball reference scene.
+# </summary>
+# </file>
 """Pressure-ball demo extracted from the old soft-ball reference scene."""
 
 from __future__ import annotations
@@ -18,6 +23,10 @@ BOUNCE = 0.75
 FLOOR_FRICTION = 0.20
 
 
+# <summary>
+# Create the pressure soft-body used by the demo.
+# </summary>
+# <returns>Computed result described by the return type annotation.</returns>
 def build_softbody() -> SoftBody:
     return SoftBody.circle(
         center=Vec2(WINDOW_WIDTH * 0.5, WINDOW_HEIGHT * 0.35),
@@ -31,6 +40,11 @@ def build_softbody() -> SoftBody:
     )
 
 
+# <summary>
+# Constrain soft-body particles to the demo bounds.
+# </summary>
+# <param name="softbody">Input value for softbody.</param>
+# <param name="dt">Simulation timestep in seconds.</param>
 def constrain_particles(softbody: SoftBody, dt: float) -> None:
     particles = softbody.particles
 
@@ -72,6 +86,11 @@ def constrain_particles(softbody: SoftBody, dt: float) -> None:
         velocity.y = vy
 
 
+# <summary>
+# Copy soft-body particle positions into a pygame polygon buffer.
+# </summary>
+# <param name="softbody">Input value for softbody.</param>
+# <param name="point_buffer">Input value for point buffer.</param>
 def fill_polygon_buffer(softbody: SoftBody, point_buffer: list[list[float]]) -> None:
     particles = softbody.particles
     for index, particle in enumerate(particles):
@@ -79,6 +98,9 @@ def fill_polygon_buffer(softbody: SoftBody, point_buffer: list[list[float]]) -> 
         point_buffer[index][1] = particle.position.y
 
 
+# <summary>
+# Run the interactive pygame demo loop.
+# </summary>
 def run() -> None:
     import pygame
 

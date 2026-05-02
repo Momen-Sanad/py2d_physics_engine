@@ -1,3 +1,8 @@
+# <file>
+# <summary>
+# Circle collision demo.
+# </summary>
+# </file>
 """Circle collision demo"""
 
 from __future__ import annotations
@@ -40,6 +45,10 @@ SLEEP_DELAY = 0.75
 WAKE_SPEED_THRESHOLD = 65.0
 
 
+# <summary>
+# Create the circle-body stack used by the rigid-body demo.
+# </summary>
+# <returns>Computed result described by the return type annotation.</returns>
 def build_bodies() -> list[CircleBody]:
     radius = BODY_RADIUS
     spacing = BODY_SPACING
@@ -79,6 +88,11 @@ def build_bodies() -> list[CircleBody]:
     return bodies
 
 
+# <summary>
+# Resolve circle-body collision against the window boundaries.
+# </summary>
+# <param name="body">Rigid body instance being read or updated.</param>
+# <param name="dt">Simulation timestep in seconds.</param>
 def contain_body(body: CircleBody, dt: float) -> None:
     position = body.position
     velocity = body.velocity
@@ -118,6 +132,12 @@ def contain_body(body: CircleBody, dt: float) -> None:
         body.contact_count += 1
 
 
+# <summary>
+# Advance the rigid-body scene by one fixed timestep.
+# </summary>
+# <param name="bodies">Rigid body collection being read or updated.</param>
+# <param name="broadphase">Spatial broadphase structure used to find collision candidates.</param>
+# <param name="dt">Simulation timestep in seconds.</param>
 def step_scene(bodies: list[CircleBody], broadphase: SpatialHashGrid, dt: float) -> None:
     step_circle_bodies(bodies, dt, gravity=GRAVITY, linear_damping=LINEAR_DAMPING)
     for body in bodies:
@@ -151,6 +171,9 @@ def step_scene(bodies: list[CircleBody], broadphase: SpatialHashGrid, dt: float)
         )
 
 
+# <summary>
+# Run the interactive pygame demo loop.
+# </summary>
 def run() -> None:
     import pygame
 

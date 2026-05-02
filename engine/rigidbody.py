@@ -1,3 +1,8 @@
+# <file>
+# <summary>
+# Rigid-body primitives for 2D motion and collision experiments.
+# </summary>
+# </file>
 """Rigid-body primitives for 2D motion and collision experiments."""
 
 from __future__ import annotations
@@ -9,6 +14,9 @@ from .math3d import Mat3, Quaternion, Vec3
 from .math2d import Vec2
 
 
+# <summary>
+# Minimal rigid body state for the first collision scenes.
+# </summary>
 @dataclass(slots=True)
 class RigidBody2D:
     """Minimal rigid body state for the first collision scenes."""
@@ -23,27 +31,48 @@ class RigidBody2D:
     inertia: float = 1.0
     is_static: bool = False
 
+    # <summary>
+    # Return zero for immovable bodies and reciprocal mass otherwise.
+    # </summary>
+    # <returns>Computed result described by the return type annotation.</returns>
     @property
     def inverse_mass(self) -> float:
         if self.is_static or self.mass == 0.0:
             return 0.0
         return 1.0 / self.mass
 
+    # <summary>
+    # Return zero for fixed rotation and reciprocal inertia otherwise.
+    # </summary>
+    # <returns>Computed result described by the return type annotation.</returns>
     @property
     def inverse_inertia(self) -> float:
         if self.is_static or self.inertia == 0.0:
             return 0.0
         return 1.0 / self.inertia
 
+    # <summary>
+    # Accumulate a linear force when the body can move.
+    # </summary>
+    # <param name="applied_force">Force vector being applied to the object.</param>
     def apply_force(self, applied_force: Vec2) -> None:
         if not self.is_static:
             self.force.x += applied_force.x
             self.force.y += applied_force.y
 
+    # <summary>
+    # Accumulate torque when the body can rotate.
+    # </summary>
+    # <param name="applied_torque">Torque value being applied to the object.</param>
     def apply_torque(self, applied_torque: float) -> None:
         if not self.is_static:
             self.torque += applied_torque
 
+    # <summary>
+    # Apply a force and convert its lever arm into torque.
+    # </summary>
+    # <param name="applied_force">Force vector being applied to the object.</param>
+    # <param name="world_point">World-space point where a force or impulse is applied.</param>
     def apply_force_at_point(self, applied_force: Vec2, world_point: Vec2) -> None:
         if self.is_static:
             return
@@ -52,6 +81,11 @@ class RigidBody2D:
         self.apply_force(applied_force)
         self.torque += lever_arm.cross(applied_force)
 
+    # <summary>
+    # Apply an instantaneous impulse to linear and optional angular velocity.
+    # </summary>
+    # <param name="impulse">Impulse vector being applied to the object.</param>
+    # <param name="world_point">World-space point where a force or impulse is applied.</param>
     def apply_impulse(self, impulse: Vec2, world_point: Vec2 | None = None) -> None:
         if self.is_static:
             return
@@ -63,6 +97,13 @@ class RigidBody2D:
             lever_arm = world_point - self.position
             self.angular_velocity += lever_arm.cross(impulse) * self.inverse_inertia
 
+    # <summary>
+    # Advance linear and angular 2D state with semi-implicit Euler.
+    # </summary>
+    # <param name="dt">Simulation timestep in seconds.</param>
+    # <param name="gravity">Optional gravity acceleration vector.</param>
+    # <param name="linear_damping">Linear damping coefficient applied during integration.</param>
+    # <param name="angular_damping">Angular damping coefficient applied during integration.</param>
     def step(
         self,
         dt: float,
@@ -96,11 +137,17 @@ class RigidBody2D:
         self.angle += self.angular_velocity * dt
         self.clear_forces()
 
+    # <summary>
+    # Clear force and torque accumulators after integration.
+    # </summary>
     def clear_forces(self) -> None:
         self.force.reset()
         self.torque = 0.0
 
 
+# <summary>
+# Torque-driven rigid body in principal/body frame coordinates.
+# </summary>
 @dataclass(slots=True)
 class RigidBody3D:
     """Torque-driven rigid body in principal/body frame coordinates."""
@@ -117,12 +164,20 @@ class RigidBody3D:
     angular_damping: float = 0.0
     is_static: bool = False
 
+    # <summary>
+    # Return zero for immovable bodies and reciprocal mass otherwise.
+    # </summary>
+    # <returns>Computed result described by the return type annotation.</returns>
     @property
     def inverse_mass(self) -> float:
         if self.is_static or self.mass == 0.0:
             return 0.0
         return 1.0 / self.mass
 
+    # <summary>
+    # Return the inverse body-frame inertia tensor when available.
+    # </summary>
+    # <returns>Computed result described by the return type annotation.</returns>
     @property
     def inverse_inertia_body(self) -> Mat3:
         if self.is_static:
@@ -132,25 +187,50 @@ class RigidBody3D:
         except ValueError:
             return Mat3.zero()
 
+    # <summary>
+    # Convert the body's quaternion orientation into a rotation matrix.
+    # </summary>
+    # <returns>Computed result described by the return type annotation.</returns>
     def rotation_matrix(self) -> Mat3:
         return self.orientation.to_rotation_matrix()
 
+    # <summary>
+    # Calculate body-frame angular momentum from inertia and angular velocity.
+    # </summary>
+    # <returns>Computed result described by the return type annotation.</returns>
     def angular_momentum(self) -> Vec3:
         return self.inertia_body @ self.angular_velocity
 
+    # <summary>
+    # Solve Euler's rotational equation for angular acceleration.
+    # </summary>
+    # <returns>Computed result described by the return type annotation.</returns>
     def angular_acceleration(self) -> Vec3:
         angular_momentum = self.angular_momentum()
         gyroscopic_term = self.angular_velocity.cross(angular_momentum)
         return self.inverse_inertia_body @ (self.torque - gyroscopic_term)
 
+    # <summary>
+    # Accumulate a linear force when the body can move.
+    # </summary>
+    # <param name="applied_force">Force vector being applied to the object.</param>
     def apply_force(self, applied_force: Vec3) -> None:
         if not self.is_static:
             self.force += applied_force
 
+    # <summary>
+    # Accumulate torque when the body can rotate.
+    # </summary>
+    # <param name="applied_torque">Torque value being applied to the object.</param>
     def apply_torque(self, applied_torque: Vec3) -> None:
         if not self.is_static:
             self.torque += applied_torque
 
+    # <summary>
+    # Apply a force and convert its lever arm into torque.
+    # </summary>
+    # <param name="applied_force">Force vector being applied to the object.</param>
+    # <param name="world_point">World-space point where a force or impulse is applied.</param>
     def apply_force_at_point(self, applied_force: Vec3, world_point: Vec3) -> None:
         if self.is_static:
             return
@@ -159,6 +239,11 @@ class RigidBody3D:
         self.force += applied_force
         self.torque += lever_arm.cross(applied_force)
 
+    # <summary>
+    # Advance linear and rotational state with semi-implicit Euler.
+    # </summary>
+    # <param name="dt">Simulation timestep in seconds.</param>
+    # <param name="gravity">Optional gravity acceleration vector.</param>
     def step(self, dt: float, gravity: Vec3 | None = None) -> None:
         """Advance linear and rotational state with semi-implicit Euler."""
 
@@ -191,11 +276,17 @@ class RigidBody3D:
         self.orientation = (self.orientation + dq_dt * dt).normalize()
         self.clear_forces()
 
+    # <summary>
+    # Clear force and torque accumulators after integration.
+    # </summary>
     def clear_forces(self) -> None:
         self.force.reset()
         self.torque.reset()
 
 
+# <summary>
+# Simple circle body extracted from the bouncing-ball reference.
+# </summary>
 @dataclass(slots=True)
 class CircleBody:
     """Simple circle body extracted from the bouncing-ball reference."""
@@ -211,12 +302,20 @@ class CircleBody:
     sleep_timer: float = 0.0
     contact_count: int = 0
 
+    # <summary>
+    # Return zero for immovable bodies and reciprocal mass otherwise.
+    # </summary>
+    # <returns>Computed result described by the return type annotation.</returns>
     @property
     def inverse_mass(self) -> float:
         if self.is_static or self.mass == 0.0:
             return 0.0
         return 1.0 / self.mass
 
+    # <summary>
+    # Accumulate a linear force when the body can move.
+    # </summary>
+    # <param name="applied_force">Force vector being applied to the object.</param>
     def apply_force(self, applied_force: Vec2) -> None:
         if not self.is_static:
             if applied_force.x != 0.0 or applied_force.y != 0.0:
@@ -224,20 +323,36 @@ class CircleBody:
             self.force.x += applied_force.x
             self.force.y += applied_force.y
 
+    # <summary>
+    # Calculate squared linear speed for sleep threshold checks.
+    # </summary>
+    # <returns>Computed result described by the return type annotation.</returns>
     def speed_squared(self) -> float:
         velocity = self.velocity
         return velocity.x * velocity.x + velocity.y * velocity.y
 
+    # <summary>
+    # Mark the circle body active so integration resumes.
+    # </summary>
     def wake(self) -> None:
         self.sleeping = False
         self.sleep_timer = 0.0
 
+    # <summary>
+    # Put the circle body to sleep and clear motion state.
+    # </summary>
     def sleep(self) -> None:
         self.sleeping = True
         self.sleep_timer = 0.0
         self.velocity.reset()
         self.force.reset()
 
+    # <summary>
+    # Advance the circle body by one timestep.
+    # </summary>
+    # <param name="dt">Simulation timestep in seconds.</param>
+    # <param name="gravity">Optional gravity acceleration vector.</param>
+    # <param name="linear_damping">Linear damping coefficient applied during integration.</param>
     def step(
         self,
         dt: float,
@@ -269,10 +384,20 @@ class CircleBody:
         position.y += velocity.y * dt
         self.clear_forces()
 
+    # <summary>
+    # Clear force and torque accumulators after integration.
+    # </summary>
     def clear_forces(self) -> None:
         self.force.reset()
 
 
+# <summary>
+# Advance many circle bodies with a flat loop.
+# </summary>
+# <param name="bodies">Rigid body collection being read or updated.</param>
+# <param name="dt">Simulation timestep in seconds.</param>
+# <param name="gravity">Optional gravity acceleration vector.</param>
+# <param name="linear_damping">Linear damping coefficient applied during integration.</param>
 def step_circle_bodies(
     bodies: Iterable[CircleBody],
     dt: float,
@@ -309,6 +434,13 @@ def step_circle_bodies(
         force.reset()
 
 
+# <summary>
+# Put resting bodies to sleep after sustained low-speed contact.
+# </summary>
+# <param name="bodies">Rigid body collection being read or updated.</param>
+# <param name="dt">Simulation timestep in seconds.</param>
+# <param name="linear_speed_threshold">Input value for linear speed threshold.</param>
+# <param name="sleep_delay">Input value for sleep delay.</param>
 def update_sleeping(
     bodies: Iterable[CircleBody],
     dt: float,

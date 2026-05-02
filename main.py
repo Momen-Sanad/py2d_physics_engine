@@ -1,3 +1,8 @@
+# <file>
+# <summary>
+# Provides the command-line launcher for runnable physics demos.
+# </summary>
+# </file>
 """Simple demo launcher for 2D physics systems."""
 
 from __future__ import annotations
@@ -15,6 +20,10 @@ DEMO_MODULES = {
 }
 
 
+# <summary>
+# Load and run the demo module selected by name.
+# </summary>
+# <param name="name">Demo or object name used to select behavior.</param>
 def launch_demo(name: str) -> None:
     module_path = DEMO_MODULES.get(name)
     if module_path is None:
@@ -25,6 +34,10 @@ def launch_demo(name: str) -> None:
     module.run()
 
 
+# <summary>
+# Run the module's command-line entry point.
+# </summary>
+# <param name="argv">Optional command-line argument list used instead of sys.argv.</param>
 def main(argv: list[str] | None = None) -> None:
     args = list(sys.argv[1:] if argv is None else argv)
 

@@ -1,11 +1,24 @@
+# <file>
+# <summary>
+# Small debug overlay helpers shared by the demo scenes.
+# </summary>
+# </file>
 """Small debug overlay helpers shared by the demo scenes."""
 
 from __future__ import annotations
 
 
+# <summary>
+# Draw a lightweight top-left performance overlay.
+# </summary>
 class PerformanceOverlay:
     """Draw a lightweight top-left performance overlay."""
 
+    # <summary>
+    # Initialize the instance state.
+    # </summary>
+    # <param name="font_size">Input value for font size.</param>
+    # <param name="update_interval">Input value for update interval.</param>
     def __init__(self, font_size: int = 22, update_interval: float = 0.5) -> None:
         import pygame
 
@@ -18,6 +31,13 @@ class PerformanceOverlay:
         self._frame_count = 0
         self._display_fps: float | None = None
 
+    # <summary>
+    # Draw frame timing, physics rate, and optional status lines.
+    # </summary>
+    # <param name="surface">pygame surface used for drawing or capture.</param>
+    # <param name="frame_time">Elapsed frame time in seconds.</param>
+    # <param name="fixed_dt">Input value for fixed dt.</param>
+    # <param name="extra_lines">Input value for extra lines.</param>
     def draw(
         self,
         surface,

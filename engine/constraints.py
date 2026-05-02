@@ -1,8 +1,23 @@
+# <file>
+# <summary>
+# Constraint-solving helpers for the PBD and rope stages.
+# </summary>
+# </file>
 """Constraint-solving helpers for the PBD and rope stages."""
 
 from .math2d import Vec2
 
 
+# <summary>
+# Return positional corrections for a simple PBD distance constraint.
+# </summary>
+# <param name="a_position">Input value for a position.</param>
+# <param name="b_position">Input value for b position.</param>
+# <param name="rest_length">Input value for rest length.</param>
+# <param name="a_inverse_mass">Input value for a inverse mass.</param>
+# <param name="b_inverse_mass">Input value for b inverse mass.</param>
+# <param name="stiffness">Input value for stiffness.</param>
+# <returns>Computed result described by the return type annotation.</returns>
 def solve_distance_constraint(
     a_position: Vec2,
     b_position: Vec2,

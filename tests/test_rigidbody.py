@@ -1,3 +1,8 @@
+# <file>
+# <summary>
+# Regression tests for rigid-body lecture mechanics.
+# </summary>
+# </file>
 """Regression tests for rigid-body lecture mechanics."""
 
 from __future__ import annotations
@@ -14,7 +19,13 @@ from engine.math3d import (
 from engine.rigidbody import RigidBody2D, RigidBody3D
 
 
+# <summary>
+# Represents the InertiaTensorTests data structure.
+# </summary>
 class InertiaTensorTests(unittest.TestCase):
+    # <summary>
+    # Verify solid cube inertia matches lecture formula.
+    # </summary>
     def test_solid_cube_inertia_matches_lecture_formula(self) -> None:
         inertia = solid_cube_inertia_tensor(mass=8.0, side_length=2.0)
         expected = (1.0 / 6.0) * 8.0 * 2.0 * 2.0
@@ -26,7 +37,13 @@ class InertiaTensorTests(unittest.TestCase):
         self.assertAlmostEqual(inertia.rows[0][2], 0.0)
 
 
+# <summary>
+# Represents the QuaternionTests data structure.
+# </summary>
 class QuaternionTests(unittest.TestCase):
+    # <summary>
+    # Verify axis angle rotates vector.
+    # </summary>
     def test_axis_angle_rotates_vector(self) -> None:
         rotation = Quaternion.from_axis_angle(Vec3(0.0, 0.0, 1.0), pi * 0.5)
         rotated = rotation.rotate_vector(Vec3(1.0, 0.0, 0.0))
@@ -36,6 +53,9 @@ class QuaternionTests(unittest.TestCase):
         self.assertAlmostEqual(rotated.z, 0.0, places=6)
         self.assertAlmostEqual(rotation.length(), 1.0, places=6)
 
+    # <summary>
+    # Verify quaternion rotation matrix matches vector rotation.
+    # </summary>
     def test_quaternion_rotation_matrix_matches_vector_rotation(self) -> None:
         rotation = Quaternion.from_axis_angle(Vec3(0.0, 1.0, 0.0), pi)
         matrix_rotated = rotation.to_rotation_matrix() @ Vec3(1.0, 0.0, 0.0)
@@ -46,7 +66,13 @@ class QuaternionTests(unittest.TestCase):
         self.assertAlmostEqual(matrix_rotated.z, quaternion_rotated.z, places=6)
 
 
+# <summary>
+# Represents the RigidBody3DTests data structure.
+# </summary>
 class RigidBody3DTests(unittest.TestCase):
+    # <summary>
+    # Verify torque updates angular velocity and orientation.
+    # </summary>
     def test_torque_updates_angular_velocity_and_orientation(self) -> None:
         body = RigidBody3D(
             position=Vec3(),
@@ -63,6 +89,9 @@ class RigidBody3DTests(unittest.TestCase):
         self.assertAlmostEqual(body.orientation.length(), 1.0, places=6)
         self.assertAlmostEqual(body.torque.length_squared(), 0.0)
 
+    # <summary>
+    # Verify isotropic body has no gyroscopic drift without torque.
+    # </summary>
     def test_isotropic_body_has_no_gyroscopic_drift_without_torque(self) -> None:
         body = RigidBody3D(
             position=Vec3(),
@@ -78,7 +107,13 @@ class RigidBody3DTests(unittest.TestCase):
         self.assertAlmostEqual(body.orientation.length(), 1.0, places=6)
 
 
+# <summary>
+# Represents the RigidBody2DTests data structure.
+# </summary>
 class RigidBody2DTests(unittest.TestCase):
+    # <summary>
+    # Verify force at point produces linear and angular motion.
+    # </summary>
     def test_force_at_point_produces_linear_and_angular_motion(self) -> None:
         body = RigidBody2D(position=Vec2(), mass=1.0, inertia=2.0)
 
@@ -91,6 +126,9 @@ class RigidBody2DTests(unittest.TestCase):
         self.assertAlmostEqual(body.angle, 0.05)
         self.assertAlmostEqual(body.torque, 0.0)
 
+    # <summary>
+    # Verify impulse at point affects angular velocity.
+    # </summary>
     def test_impulse_at_point_affects_angular_velocity(self) -> None:
         body = RigidBody2D(position=Vec2(), mass=2.0, inertia=4.0)
 

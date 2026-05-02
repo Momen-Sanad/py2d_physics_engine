@@ -1,3 +1,8 @@
+# <file>
+# <summary>
+# Provides screenshot and GIF capture helpers for pygame demo scenes.
+# </summary>
+# </file>
 """Standalone media capture helpers for demo scenes.
 
 This module intentionally lives outside ``engine/`` because it is a tooling/UI
@@ -11,6 +16,9 @@ from datetime import datetime
 from pathlib import Path
 
 
+# <summary>
+# Runtime screenshot and GIF capture controller for pygame scenes.
+# </summary>
 @dataclass(slots=True)
 class CaptureController:
     """Runtime screenshot and GIF capture controller for pygame scenes."""
@@ -28,10 +36,19 @@ class CaptureController:
     _message: str = ""
     _message_timer: float = 0.0
 
+    # <summary>
+    # Finalize dataclass-derived state after initialization.
+    # </summary>
     def __post_init__(self) -> None:
         self.output_path = Path(self.output_dir)
         self.output_path.mkdir(parents=True, exist_ok=True)
 
+    # <summary>
+    # Handle capture hotkeys. Returns True when consumed.
+    # </summary>
+    # <param name="event">pygame event being handled.</param>
+    # <param name="surface">pygame surface used for drawing or capture.</param>
+    # <returns>Computed result described by the return type annotation.</returns>
     def handle_keydown(self, event, surface) -> bool:
         """Handle capture hotkeys. Returns True when consumed."""
 
@@ -45,6 +62,10 @@ class CaptureController:
             return True
         return False
 
+    # <summary>
+    # Save a PNG screenshot of the provided surface.
+    # </summary>
+    # <param name="surface">pygame surface used for drawing or capture.</param>
     def save_screenshot(self, surface) -> None:
         """Save a PNG screenshot of the provided surface."""
 
@@ -54,6 +75,10 @@ class CaptureController:
         pygame.image.save(surface, path)
         self._set_message(f"Screenshot: {path.name}")
 
+    # <summary>
+    # Start/stop GIF recording on repeated key presses.
+    # </summary>
+    # <param name="surface">pygame surface used for drawing or capture.</param>
     def toggle_gif_recording(self, surface) -> None:
         """Start/stop GIF recording on repeated key presses."""
 
@@ -69,6 +94,11 @@ class CaptureController:
         self.recording = False
         self._set_message(self._save_gif())
 
+    # <summary>
+    # Advance capture state and collect frames when recording.
+    # </summary>
+    # <param name="surface">pygame surface used for drawing or capture.</param>
+    # <param name="frame_time">Elapsed frame time in seconds.</param>
     def update(self, surface, frame_time: float) -> None:
         """Advance capture state and collect frames when recording."""
 
@@ -86,6 +116,10 @@ class CaptureController:
             self._capture_accumulator -= interval
             self._record_frame(surface)
 
+    # <summary>
+    # Return lightweight capture status lines for debug overlays.
+    # </summary>
+    # <returns>Computed result described by the return type annotation.</returns>
     def overlay_lines(self) -> list[str]:
         """Return lightweight capture status lines for debug overlays."""
 
@@ -98,6 +132,10 @@ class CaptureController:
             lines.append("Capture: TAB screenshot, ` GIF start/stop")
         return lines
 
+    # <summary>
+    # Capture the current surface as a Pillow frame for GIF output.
+    # </summary>
+    # <param name="surface">pygame surface used for drawing or capture.</param>
     def _record_frame(self, surface) -> None:
         image_module = self._load_pillow_image_module()
         if image_module is None:
@@ -112,6 +150,10 @@ class CaptureController:
         self._frames.append(frame)
         self.frame_count += 1
 
+    # <summary>
+    # Encode captured frames into a GIF and reset recording state.
+    # </summary>
+    # <returns>Computed result described by the return type annotation.</returns>
     def _save_gif(self) -> str:
         if not self._frames:
             return "GIF canceled: no frames captured"
@@ -139,12 +181,20 @@ class CaptureController:
         self.frame_count = 0
         return f"GIF saved: {path.name} ({frame_total} frames)"
 
+    # <summary>
+    # Convert a pygame surface into raw RGB bytes.
+    # </summary>
+    # <param name="surface">pygame surface used for drawing or capture.</param>
+    # <returns>Computed result described by the return type annotation.</returns>
     @staticmethod
     def _surface_rgb_bytes(surface) -> bytes:
         import pygame
 
         return pygame.image.tostring(surface, "RGB")
 
+    # <summary>
+    # Import Pillow lazily so screenshots still work without GIF support.
+    # </summary>
     @staticmethod
     def _load_pillow_image_module():
         try:
@@ -153,10 +203,19 @@ class CaptureController:
             return None
         return Image
 
+    # <summary>
+    # Build a timestamped capture path for the current demo.
+    # </summary>
+    # <param name="extension">File extension used when building a capture path.</param>
+    # <returns>Computed result described by the return type annotation.</returns>
     def _new_file_path(self, extension: str) -> Path:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         return self.output_path / f"{self.demo_name}_{timestamp}.{extension}"
 
+    # <summary>
+    # Store a temporary capture status message for the overlay.
+    # </summary>
+    # <param name="message">Status message to display in the overlay.</param>
     def _set_message(self, message: str) -> None:
         self._message = message
         self._message_timer = self.message_duration

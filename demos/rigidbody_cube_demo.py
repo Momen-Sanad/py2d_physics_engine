@@ -1,3 +1,8 @@
+# <file>
+# <summary>
+# Rigid-body lecture demo: torque-driven rotating cube.
+# </summary>
+# </file>
 """Rigid-body lecture demo: torque-driven rotating cube."""
 
 from __future__ import annotations
@@ -28,6 +33,10 @@ INERTIA_DIAGONAL = (
 )
 
 
+# <summary>
+# Create the configured rigid cube body for the lecture demo.
+# </summary>
+# <returns>Computed result described by the return type annotation.</returns>
 def build_cube_body() -> RigidBody3D:
     return RigidBody3D(
         position=Vec3(0.0, 0.0, CAMERA_DISTANCE),
@@ -37,6 +46,10 @@ def build_cube_body() -> RigidBody3D:
     )
 
 
+# <summary>
+# Return the cube's local-space vertex positions.
+# </summary>
+# <returns>Computed result described by the return type annotation.</returns>
 def cube_vertices() -> list[Vec3]:
     half_side = SIDE_LENGTH * 0.5
     return [
@@ -68,6 +81,11 @@ CUBE_EDGES = [
 ]
 
 
+# <summary>
+# Project a 3D point into 2D screen coordinates.
+# </summary>
+# <param name="point">Point or vector being transformed.</param>
+# <returns>Computed result described by the return type annotation.</returns>
 def project(point: Vec3) -> tuple[int, int] | None:
     if point.z <= 0.1:
         return None
@@ -79,11 +97,21 @@ def project(point: Vec3) -> tuple[int, int] | None:
     )
 
 
+# <summary>
+# Transform cube vertices from local space into world space.
+# </summary>
+# <param name="body">Rigid body instance being read or updated.</param>
+# <returns>Computed result described by the return type annotation.</returns>
 def transformed_vertices(body: RigidBody3D) -> list[Vec3]:
     rotation = body.rotation_matrix()
     return [rotation @ vertex + body.position for vertex in CUBE_VERTICES]
 
 
+# <summary>
+# Draw the cube's rotated local basis axes.
+# </summary>
+# <param name="screen">pygame display surface used for rendering.</param>
+# <param name="body">Rigid body instance being read or updated.</param>
 def draw_axis(screen, body: RigidBody3D) -> None:
     import pygame
 
@@ -104,6 +132,11 @@ def draw_axis(screen, body: RigidBody3D) -> None:
             pygame.draw.circle(screen, color, endpoint, 5)
 
 
+# <summary>
+# Render the wireframe cube and its local axes.
+# </summary>
+# <param name="screen">pygame display surface used for rendering.</param>
+# <param name="body">Rigid body instance being read or updated.</param>
 def draw_cube(screen, body: RigidBody3D) -> None:
     import pygame
 
@@ -124,6 +157,11 @@ def draw_cube(screen, body: RigidBody3D) -> None:
     draw_axis(screen, body)
 
 
+# <summary>
+# Apply torque to the cube from the current keyboard state.
+# </summary>
+# <param name="body">Rigid body instance being read or updated.</param>
+# <param name="keys">Current keyboard state returned by pygame.</param>
 def apply_keyboard_torque(body: RigidBody3D, keys) -> None:
     import pygame
 
@@ -145,6 +183,12 @@ def apply_keyboard_torque(body: RigidBody3D, keys) -> None:
         body.apply_torque(torque)
 
 
+# <summary>
+# Build debug-overlay text for the rigid-body cube demo.
+# </summary>
+# <param name="body">Rigid body instance being read or updated.</param>
+# <param name="paused">Whether the simulation is currently paused.</param>
+# <returns>Computed result described by the return type annotation.</returns>
 def overlay_lines(body: RigidBody3D, paused: bool) -> list[str]:
     q = body.orientation
     w = body.angular_velocity
@@ -165,6 +209,9 @@ def overlay_lines(body: RigidBody3D, paused: bool) -> list[str]:
     ]
 
 
+# <summary>
+# Run the interactive pygame demo loop.
+# </summary>
 def run() -> None:
     import pygame
 

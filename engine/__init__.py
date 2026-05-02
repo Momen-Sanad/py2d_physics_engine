@@ -1,3 +1,8 @@
+# <file>
+# <summary>
+# Exports the shared physics-engine symbols used by demos and tests.
+# </summary>
+# </file>
 """Shared 2D physics engine package."""
 
 from .config import EngineConfig

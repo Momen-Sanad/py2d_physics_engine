@@ -1,3 +1,8 @@
+# <file>
+# <summary>
+# Basic 2D collision helpers.
+# </summary>
+# </file>
 """Basic 2D collision helpers"""
 
 from __future__ import annotations
@@ -8,6 +13,9 @@ from typing import Protocol
 from .math2d import Vec2
 
 
+# <summary>
+# Collision contact data shared by simple response code.
+# </summary>
 @dataclass(frozen=True, slots=True)
 class Contact:
     """Collision contact data shared by simple response code."""
@@ -16,6 +24,9 @@ class Contact:
     penetration: float
 
 
+# <summary>
+# Minimal shape needed for circle-vs-circle collision resolution.
+# </summary>
 class CircleBodyLike(Protocol):
     """Minimal shape needed for circle-vs-circle collision resolution."""
 
@@ -24,6 +35,10 @@ class CircleBodyLike(Protocol):
     radius: float
     restitution: float
 
+    # <summary>
+    # Return zero for immovable bodies and reciprocal mass otherwise.
+    # </summary>
+    # <returns>Computed result described by the return type annotation.</returns>
     @property
     def inverse_mass(self) -> float:
         ...
@@ -31,6 +46,14 @@ class CircleBodyLike(Protocol):
     sleeping: bool
 
 
+# <summary>
+# Detect overlap between two circle shapes.
+# </summary>
+# <param name="a_position">Input value for a position.</param>
+# <param name="a_radius">Input value for a radius.</param>
+# <param name="b_position">Input value for b position.</param>
+# <param name="b_radius">Input value for b radius.</param>
+# <returns>Computed result described by the return type annotation.</returns>
 def circle_vs_circle(
     a_position: Vec2,
     a_radius: float,
@@ -46,6 +69,13 @@ def circle_vs_circle(
     return Contact(normal=normal, penetration=penetration)
 
 
+# <summary>
+# Detect overlap between a circle and a horizontal ground plane.
+# </summary>
+# <param name="position">Position vector used by the calculation.</param>
+# <param name="radius">Radius value used by the geometry or physics calculation.</param>
+# <param name="ground_y">Input value for ground y.</param>
+# <returns>Computed result described by the return type annotation.</returns>
 def circle_vs_ground(position: Vec2, radius: float, ground_y: float) -> Contact | None:
     penetration = (position.y + radius) - ground_y
     if penetration <= 0.0:
@@ -53,6 +83,13 @@ def circle_vs_ground(position: Vec2, radius: float, ground_y: float) -> Contact 
     return Contact(normal=Vec2(0.0, -1.0), penetration=penetration)
 
 
+# <summary>
+# Resolve overlap and velocity response for two circle bodies.
+# </summary>
+# <param name="body_a">Input value for body a.</param>
+# <param name="body_b">Input value for body b.</param>
+# <param name="restitution">Input value for restitution.</param>
+# <returns>Computed result described by the return type annotation.</returns>
 def resolve_circle_collision(
     body_a: CircleBodyLike,
     body_b: CircleBodyLike,

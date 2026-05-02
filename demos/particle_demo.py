@@ -1,3 +1,8 @@
+# <file>
+# <summary>
+# Interactive particle playground demo.
+# </summary>
+# </file>
 """Interactive particle playground demo."""
 
 from __future__ import annotations
@@ -41,10 +46,24 @@ BACKGROUND_THEMES = (
 )
 
 
+# <summary>
+# Clamp a numeric value into an inclusive range.
+# </summary>
+# <param name="value">Input value to process.</param>
+# <param name="minimum">Lower bound used when clamping the value.</param>
+# <param name="maximum">Upper bound used when clamping the value.</param>
+# <returns>Computed result described by the return type annotation.</returns>
 def clamp(value: float, minimum: float, maximum: float) -> float:
     return max(minimum, min(maximum, value))
 
 
+# <summary>
+# Blend two RGB colors by a normalized interpolation amount.
+# </summary>
+# <param name="color_a">First RGB color endpoint.</param>
+# <param name="color_b">Second RGB color endpoint.</param>
+# <param name="t">Interpolation amount between 0.0 and 1.0.</param>
+# <returns>Computed result described by the return type annotation.</returns>
 def mix_color(color_a: tuple[int, int, int], color_b: tuple[int, int, int], t: float) -> tuple[int, int, int]:
     blend = clamp(t, 0.0, 1.0)
     return (
@@ -54,6 +73,12 @@ def mix_color(color_a: tuple[int, int, int], color_b: tuple[int, int, int], t: f
     )
 
 
+# <summary>
+# Create an initial particle velocity for the selected emitter mode.
+# </summary>
+# <param name="mode_index">Selected mode index controlling behavior.</param>
+# <param name="rng">Random number generator used for deterministic sampling.</param>
+# <returns>Computed result described by the return type annotation.</returns>
 def spawn_velocity(mode_index: int, rng: Random) -> Vec2:
     if mode_index == 0:
         angle = rng.uniform(-2.1, -1.0)
@@ -67,6 +92,16 @@ def spawn_velocity(mode_index: int, rng: Random) -> Vec2:
     return Vec2(cos(angle) * speed, sin(angle) * speed)
 
 
+# <summary>
+# Create and append one particle using the current emitter settings.
+# </summary>
+# <param name="particles">Particle collection being read or updated.</param>
+# <param name="birth_lifetimes">Input value for birth lifetimes.</param>
+# <param name="emitter_position">Input value for emitter position.</param>
+# <param name="emitter_mode">Input value for emitter mode.</param>
+# <param name="lifetime_scale">Input value for lifetime scale.</param>
+# <param name="pin_mode">Input value for pin mode.</param>
+# <param name="rng">Random number generator used for deterministic sampling.</param>
 def emit_particle(
     particles: list[Particle],
     birth_lifetimes: dict[int, float],
@@ -103,6 +138,11 @@ def emit_particle(
     birth_lifetimes[id(particle)] = lifetime
 
 
+# <summary>
+# Remove expired particles and stale lifetime bookkeeping entries.
+# </summary>
+# <param name="particles">Particle collection being read or updated.</param>
+# <param name="birth_lifetimes">Input value for birth lifetimes.</param>
 def cleanup_particles(particles: list[Particle], birth_lifetimes: dict[int, float]) -> None:
     write_index = 0
     for particle in particles:
@@ -115,6 +155,11 @@ def cleanup_particles(particles: list[Particle], birth_lifetimes: dict[int, floa
         del particles[write_index:]
 
 
+# <summary>
+# Resolve particle collision against the demo window bounds.
+# </summary>
+# <param name="particle">Particle instance being read or updated.</param>
+# <param name="dt">Simulation timestep in seconds.</param>
 def contain_particle(particle: Particle, dt: float) -> None:
     if particle.pinned:
         return
@@ -149,6 +194,13 @@ def contain_particle(particle: Particle, dt: float) -> None:
     velocity.y = vy
 
 
+# <summary>
+# Apply the currently enabled particle-demo forces.
+# </summary>
+# <param name="particles">Particle collection being read or updated.</param>
+# <param name="use_wind">Input value for use wind.</param>
+# <param name="use_air_drag">Input value for use air drag.</param>
+# <param name="wind_strength">Input value for wind strength.</param>
 def apply_forces(
     particles: list[Particle],
     use_wind: bool,
@@ -164,6 +216,13 @@ def apply_forces(
             particle.apply_force(drag_force(particle.velocity, AIR_DRAG))
 
 
+# <summary>
+# Choose the display color for a particle based on age and mode.
+# </summary>
+# <param name="particle">Particle instance being read or updated.</param>
+# <param name="mode_index">Selected mode index controlling behavior.</param>
+# <param name="birth_lifetimes">Input value for birth lifetimes.</param>
+# <returns>Computed result described by the return type annotation.</returns>
 def particle_color(
     particle: Particle,
     mode_index: int,
@@ -185,6 +244,14 @@ def particle_color(
     return mix_color((92, 223, 168), (247, 105, 193), mass_ratio)
 
 
+# <summary>
+# Render one particle using the selected drawing style.
+# </summary>
+# <param name="surface">pygame surface used for drawing or capture.</param>
+# <param name="particle">Particle instance being read or updated.</param>
+# <param name="color">Input value for color.</param>
+# <param name="draw_mode">Input value for draw mode.</param>
+# <param name="render_scale">Input value for render scale.</param>
 def draw_particle(surface, particle: Particle, color: tuple[int, int, int], draw_mode: int, render_scale: float) -> None:
     x = int(particle.position.x)
     y = int(particle.position.y)
@@ -207,6 +274,12 @@ def draw_particle(surface, particle: Particle, color: tuple[int, int, int], draw
     pygame.draw.circle(surface, color, (x, y), radius, 1)
 
 
+# <summary>
+# Render the particle-demo help panel.
+# </summary>
+# <param name="surface">pygame surface used for drawing or capture.</param>
+# <param name="font">Font object used to render text.</param>
+# <param name="lines">Text lines to draw or return.</param>
 def draw_help(surface, font, lines: list[str]) -> None:
     import pygame
 
@@ -226,6 +299,9 @@ def draw_help(surface, font, lines: list[str]) -> None:
         y += 20
 
 
+# <summary>
+# Run the interactive pygame demo loop.
+# </summary>
 def run() -> None:
     import pygame
 

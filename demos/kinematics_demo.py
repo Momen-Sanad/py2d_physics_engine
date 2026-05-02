@@ -1,3 +1,8 @@
+# <file>
+# <summary>
+# FK/IK demo placeholder.
+# </summary>
+# </file>
 """FK/IK demo placeholder.
 
 Build this fifth:

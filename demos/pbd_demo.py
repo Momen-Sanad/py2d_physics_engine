@@ -1,3 +1,8 @@
+# <file>
+# <summary>
+# PBD demo placeholder.
+# </summary>
+# </file>
 """PBD demo placeholder.
 
 Build this third:

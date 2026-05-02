@@ -1,3 +1,8 @@
+# <file>
+# <summary>
+# Spring-net demo extracted from the old falling-net reference scene.
+# </summary>
+# </file>
 """Spring-net demo extracted from the old falling-net reference scene."""
 
 from __future__ import annotations
@@ -24,6 +29,10 @@ COLUMNS = 12
 SPACING = 28.0
 
 
+# <summary>
+# Create the pinned spring-net cloth scene.
+# </summary>
+# <returns>Computed result described by the return type annotation.</returns>
 def build_cloth() -> tuple[list[Particle], list[Spring]]:
     particles: list[Particle] = []
     grid: list[list[Particle]] = []
@@ -75,6 +84,10 @@ def build_cloth() -> tuple[list[Particle], list[Spring]]:
     return particles, springs
 
 
+# <summary>
+# Constrain one spring-demo particle to the window bounds.
+# </summary>
+# <param name="particle">Particle instance being read or updated.</param>
 def constrain_particle(particle: Particle) -> None:
     if particle.pinned:
         return
@@ -104,6 +117,12 @@ def constrain_particle(particle: Particle) -> None:
     velocity.y = vy
 
 
+# <summary>
+# Advance the rigid-body scene by one fixed timestep.
+# </summary>
+# <param name="particles">Particle collection being read or updated.</param>
+# <param name="springs">Spring collection being read or updated.</param>
+# <param name="dt">Simulation timestep in seconds.</param>
 def step_scene(particles: list[Particle], springs: list[Spring], dt: float) -> None:
     apply_springs(springs)
     step_particles(particles, dt, gravity=GRAVITY, linear_damping=LINEAR_DAMPING)
@@ -111,6 +130,9 @@ def step_scene(particles: list[Particle], springs: list[Spring], dt: float) -> N
         constrain_particle(particle)
 
 
+# <summary>
+# Run the interactive pygame demo loop.
+# </summary>
 def run() -> None:
     import pygame
 

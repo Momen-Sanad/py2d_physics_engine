@@ -1,3 +1,8 @@
+# <file>
+# <summary>
+# Particle data structures shared by particles, springs, and PBD.
+# </summary>
+# </file>
 """Particle data structures shared by particles, springs, and PBD."""
 
 from __future__ import annotations
@@ -8,6 +13,9 @@ from typing import Iterable
 from .math2d import Vec2
 
 
+# <summary>
+# Point-mass particle with accumulated forces.
+# </summary>
 @dataclass(slots=True)
 class Particle:
     """Point-mass particle with accumulated forces."""
@@ -21,17 +29,31 @@ class Particle:
     pinned: bool = False
     restitution: float = 0.9
 
+    # <summary>
+    # Return zero for immovable bodies and reciprocal mass otherwise.
+    # </summary>
+    # <returns>Computed result described by the return type annotation.</returns>
     @property
     def inverse_mass(self) -> float:
         if self.pinned or self.mass == 0.0:
             return 0.0
         return 1.0 / self.mass
 
+    # <summary>
+    # Accumulate a force on this particle unless it is pinned.
+    # </summary>
+    # <param name="applied_force">Force vector being applied to the object.</param>
     def apply_force(self, applied_force: Vec2) -> None:
         if not self.pinned:
             self.force.x += applied_force.x
             self.force.y += applied_force.y
 
+    # <summary>
+    # Advance the particle by one timestep.
+    # </summary>
+    # <param name="dt">Simulation timestep in seconds.</param>
+    # <param name="gravity">Optional gravity acceleration vector.</param>
+    # <param name="linear_damping">Linear damping coefficient applied during integration.</param>
     def step(
         self,
         dt: float,
@@ -65,10 +87,20 @@ class Particle:
         position.y += velocity.y * dt
         self.clear_forces()
 
+    # <summary>
+    # Clear the force accumulator after integration.
+    # </summary>
     def clear_forces(self) -> None:
         self.force.reset()
 
 
+# <summary>
+# Advance many particles with minimal temporary allocations.
+# </summary>
+# <param name="particles">Particle collection being read or updated.</param>
+# <param name="dt">Simulation timestep in seconds.</param>
+# <param name="gravity">Optional gravity acceleration vector.</param>
+# <param name="linear_damping">Linear damping coefficient applied during integration.</param>
 def step_particles(
     particles: Iterable[Particle],
     dt: float,

@@ -1,3 +1,8 @@
+# <file>
+# <summary>
+# Central configuration values for the 2D physics engine.
+# </summary>
+# </file>
 """Central configuration values for the 2D physics engine."""
 
 from dataclasses import dataclass, field
@@ -5,6 +10,9 @@ from dataclasses import dataclass, field
 from .math2d import Vec2
 
 
+# <summary>
+# Shared simulation settings used across demos and systems.
+# </summary>
 @dataclass(frozen=True, slots=True)
 class EngineConfig:
     """Shared simulation settings used across demos and systems."""
