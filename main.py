@@ -11,6 +11,7 @@ DEMO_MODULES = {
     "spring": "demos.spring_demo",
     "softbody": "demos.softbody_demo",
     "rigidbody": "demos.rigidbody_demo",
+    "rigidbody_cube": "demos.rigidbody_cube_demo",
 }
 
 
