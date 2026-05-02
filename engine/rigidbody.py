@@ -40,6 +40,62 @@ class RigidBody2D:
             self.force.x += applied_force.x
             self.force.y += applied_force.y
 
+    def apply_torque(self, applied_torque: float) -> None:
+        if not self.is_static:
+            self.torque += applied_torque
+
+    def apply_force_at_point(self, applied_force: Vec2, world_point: Vec2) -> None:
+        if self.is_static:
+            return
+
+        lever_arm = world_point - self.position
+        self.apply_force(applied_force)
+        self.torque += lever_arm.cross(applied_force)
+
+    def apply_impulse(self, impulse: Vec2, world_point: Vec2 | None = None) -> None:
+        if self.is_static:
+            return
+
+        inverse_mass = self.inverse_mass
+        self.velocity.x += impulse.x * inverse_mass
+        self.velocity.y += impulse.y * inverse_mass
+        if world_point is not None:
+            lever_arm = world_point - self.position
+            self.angular_velocity += lever_arm.cross(impulse) * self.inverse_inertia
+
+    def step(
+        self,
+        dt: float,
+        gravity: Vec2 | None = None,
+        linear_damping: float = 0.0,
+        angular_damping: float = 0.0,
+    ) -> None:
+        """Advance linear and angular 2D state with semi-implicit Euler."""
+
+        if self.is_static:
+            self.clear_forces()
+            return
+
+        gravity_x = 0.0 if gravity is None else gravity.x
+        gravity_y = 0.0 if gravity is None else gravity.y
+        inverse_mass = self.inverse_mass
+
+        self.velocity.x += (gravity_x + self.force.x * inverse_mass) * dt
+        self.velocity.y += (gravity_y + self.force.y * inverse_mass) * dt
+        if linear_damping > 0.0:
+            damping_factor = max(0.0, 1.0 - linear_damping * dt)
+            self.velocity.x *= damping_factor
+            self.velocity.y *= damping_factor
+
+        self.position.x += self.velocity.x * dt
+        self.position.y += self.velocity.y * dt
+
+        self.angular_velocity += self.torque * self.inverse_inertia * dt
+        if angular_damping > 0.0:
+            self.angular_velocity *= max(0.0, 1.0 - angular_damping * dt)
+        self.angle += self.angular_velocity * dt
+        self.clear_forces()
+
     def clear_forces(self) -> None:
         self.force.reset()
         self.torque = 0.0
