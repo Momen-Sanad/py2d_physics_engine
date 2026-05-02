@@ -21,7 +21,7 @@ The short-term goal is to build a clean engine with standalone demos for:
 | Particle system | Implemented demo | `demos/particle_demo.py` + launcher key `particle` |
 | Mass-spring system | Implemented demo | `demos/spring_demo.py`, `engine/spring.py` |
 | Pressure soft body | Implemented demo | `demos/softbody_demo.py`, `engine/softbody.py` |
-| Rigid body dynamics | Implemented demo | `demos/rigidbody_demo.py`, `engine/rigidbody.py`, `engine/broadphase.py` |
+| Rigid body dynamics | Implemented demos | `demos/rigidbody_demo.py`, `demos/rigidbody_cube_demo.py`, `engine/rigidbody.py`, `engine/math3d.py`, `engine/broadphase.py` |
 | PBD | Scaffolded only | `engine/pbd.py`, `demos/pbd_demo.py` placeholder |
 | FK | Scaffolded helper only | `engine/kinematics.py` (`forward_chain`) |
 | IK | Not implemented | No IK solver/demo integrated yet |
@@ -36,6 +36,7 @@ project/
     __init__.py
     config.py
     math2d.py
+    math3d.py
     core.py
     integrators.py
     forces.py
@@ -55,6 +56,7 @@ project/
     softbody_demo.py
     pbd_demo.py
     rigidbody_demo.py
+    rigidbody_cube_demo.py
     kinematics_demo.py
   docs/
     PHYSICS_ENGINE_PIPELINE.md
@@ -68,7 +70,8 @@ The repo currently has these runnable and scaffolded systems:
 2. Falling spring-net demo in `demos/spring_demo.py`
 3. Pressure-based soft-body demo in `demos/softbody_demo.py`
 4. Circle rigid-body demo with broadphase in `demos/rigidbody_demo.py`
-5. PBD/FK module scaffolding in `engine/pbd.py` and `engine/kinematics.py`
+5. Lec09 cube rigid-body rotation demo in `demos/rigidbody_cube_demo.py`
+6. PBD/FK module scaffolding in `engine/pbd.py` and `engine/kinematics.py`
 
 ## Development Rules
 
@@ -163,12 +166,14 @@ Build after PBD:
 4. Circle-ground collisions
 5. Circle-circle collisions
 6. Impulse response
+7. Lec09 rotation coverage: inertia tensors, torque, angular momentum, Newton-Euler rotation, rotation matrices, and quaternion orientation
 
 Definition of done:
 
 1. Bodies fall, collide, and separate correctly.
 2. Resting and bouncing behavior are at least believable.
 3. You can spawn or launch rigid bodies in a demo scene.
+4. A torque-driven cube demo shows quaternion-normalized 3D orientation and projected rotation.
 
 ### Stage 6: kinematics (FK scaffolded, IK pending)
 

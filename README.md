@@ -33,7 +33,7 @@ Planned module set:
 | Particle system | Implemented demo | Interactive playground with runtime controls |
 | Mass-spring system | Implemented demo | Spring-net cloth-like scene |
 | Pressure soft body | Implemented demo | Spring + pressure model |
-| Rigid bodies | Implemented demo | Circle collisions + broadphase |
+| Rigid bodies | Implemented demos | 2D circle collisions + Lec09 cube rotation demo |
 | PBD | Planned / scaffolded | `engine/pbd.py` and `demos/pbd_demo.py` are placeholders |
 | FK | Partially scaffolded | Helper logic exists in `engine/kinematics.py`; no demo scene yet |
 | IK | Planned | Not implemented yet |
@@ -65,6 +65,7 @@ python main.py particle
 python main.py spring
 python main.py softbody
 python main.py rigidbody
+python main.py rigidbody_cube
 ```
 
 You can also inspect available options:
@@ -166,12 +167,22 @@ Controls:
 - `R`: reset
 - `Space`: pause/resume
 
+### Rigid Body Cube Demo (`python main.py rigidbody_cube`)
+
+- Lec09 rotation demo using a torque-driven wireframe cube
+- Covers cube inertia, angular momentum, Newton-Euler rotation, semi-implicit integration, quaternion orientation, and rotation-matrix projection
+- `Arrows`: apply torque on X/Y axes
+- `Q` / `E`: apply torque on Z axis
+- `R`: reset
+- `Space`: pause/resume
+
 ## Architecture
 
 ### Engine Modules (`engine/`)
 
 - `core.py`: fixed-timestep clock and world stepping
 - `math2d.py`: vector math utilities
+- `math3d.py`: 3D vectors, matrices, quaternions, and inertia helpers
 - `integrators.py`: integration helpers
 - `forces.py`: reusable force utilities (gravity, drag)
 - `collisions.py`: collision detection and response helpers
@@ -179,7 +190,7 @@ Controls:
 - `particle.py`: particle data and stepping
 - `spring.py`: spring force model
 - `softbody.py`: pressure + spring soft body logic
-- `rigidbody.py`: rigid body primitives and stepping
+- `rigidbody.py`: 2D and 3D rigid body primitives and stepping
 - `broadphase.py`: spatial partitioning for collision candidate reduction
 - `pbd.py`: PBD scaffolding
 - `kinematics.py`: FK helper scaffolding
@@ -191,6 +202,7 @@ Controls:
 - `spring_demo.py`
 - `softbody_demo.py`
 - `rigidbody_demo.py`
+- `rigidbody_cube_demo.py`
 - `pbd_demo.py` (placeholder)
 - `kinematics_demo.py` (placeholder)
 
@@ -215,6 +227,7 @@ Controls:
 |   |-- forces.py
 |   |-- integrators.py
 |   |-- kinematics.py
+|   |-- math3d.py
 |   |-- math2d.py
 |   |-- particle.py
 |   |-- pbd.py
@@ -226,6 +239,7 @@ Controls:
 |   |-- kinematics_demo.py
 |   |-- particle_demo.py
 |   |-- pbd_demo.py
+|   |-- rigidbody_cube_demo.py
 |   |-- rigidbody_demo.py
 |   |-- softbody_demo.py
 |   |-- spring_demo.py

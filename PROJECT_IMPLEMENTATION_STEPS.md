@@ -14,7 +14,7 @@
 | Engine core (loop, timing, math, forces, collisions, constraints) | Implemented | `engine/core.py`, `engine/math2d.py`, `engine/integrators.py`, `engine/forces.py`, `engine/collisions.py`, `engine/constraints.py` |
 | Particle demo | Implemented | `demos/particle_demo.py` + launcher key `particle` |
 | Mass-spring demos | Implemented | `demos/spring_demo.py`, `engine/spring.py`, `demos/softbody_demo.py`, `engine/softbody.py` |
-| Rigid body dynamics demo | Implemented | `demos/rigidbody_demo.py`, `engine/rigidbody.py`, `engine/broadphase.py` |
+| Rigid body dynamics demos | Implemented | `demos/rigidbody_demo.py`, `demos/rigidbody_cube_demo.py`, `engine/rigidbody.py`, `engine/math3d.py`, `engine/broadphase.py` |
 | PBD | Scaffolded only | `engine/pbd.py` helper types/functions, `demos/pbd_demo.py` placeholder |
 | FK | Scaffolded helper only | `engine/kinematics.py` (`forward_chain`) |
 | IK | Not started | No IK solver/demo integrated yet |
@@ -91,6 +91,7 @@ python main.py particle
 python main.py spring
 python main.py softbody
 python main.py rigidbody
+python main.py rigidbody_cube
 ```
 
 Planned additions once implemented:
@@ -102,7 +103,7 @@ python main.py kinematics
 
 ## 9. Bottom Line
 
-1. Scope is stable and low-risk: **2D only**.
+1. Scope is stable and low-risk: **2D-first**, with a contained 3D rigid-body lecture demo for Lec09 rotation coverage.
 2. Particle, spring/soft-body, and rigid-body demos are already in place.
 3. The next major implementation target is full **PBD**.
 4. After PBD, finish **FK then IK**, then move to final integration.
