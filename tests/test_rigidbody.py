@@ -1,9 +1,9 @@
 # <file>
 # <summary>
-# Regression tests for rigid-body lecture mechanics.
+# Regression tests for rigid-body mechanics.
 # </summary>
 # </file>
-"""Regression tests for rigid-body lecture mechanics."""
+"""Regression tests for rigid-body mechanics."""
 
 from __future__ import annotations
 
@@ -24,9 +24,9 @@ from engine.rigidbody import RigidBody2D, RigidBody3D
 # </summary>
 class InertiaTensorTests(unittest.TestCase):
     # <summary>
-    # Verify solid cube inertia matches lecture formula.
+    # Verify solid cube inertia matches the standard analytical formula.
     # </summary>
-    def test_solid_cube_inertia_matches_lecture_formula(self) -> None:
+    def test_solid_cube_inertia_matches_standard_formula(self) -> None:
         inertia = solid_cube_inertia_tensor(mass=8.0, side_length=2.0)
         expected = (1.0 / 6.0) * 8.0 * 2.0 * 2.0
 

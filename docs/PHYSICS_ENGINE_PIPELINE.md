@@ -70,7 +70,7 @@ The repo currently has these runnable and scaffolded systems:
 2. Falling spring-net demo in `demos/spring_demo.py`
 3. Pressure-based soft-body demo in `demos/softbody_demo.py`
 4. Circle rigid-body demo with broadphase in `demos/rigidbody_demo.py`
-5. Lec09 cube rigid-body rotation demo in `demos/rigidbody_cube_demo.py`
+5. Cube rigid-body rotation demo in `demos/rigidbody_cube_demo.py`
 6. PBD/FK module scaffolding in `engine/pbd.py` and `engine/kinematics.py`
 
 ## Development Rules
@@ -166,7 +166,7 @@ Build after PBD:
 4. Circle-ground collisions
 5. Circle-circle collisions
 6. Impulse response
-7. Lec09 rotation coverage: inertia tensors, torque, angular momentum, Newton-Euler rotation, rotation matrices, and quaternion orientation
+7. Rotation coverage: inertia tensors, torque, angular momentum, Newton-Euler rotation, rotation matrices, and quaternion orientation
 
 Definition of done:
 

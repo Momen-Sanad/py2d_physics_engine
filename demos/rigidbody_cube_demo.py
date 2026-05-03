@@ -1,9 +1,9 @@
 # <file>
 # <summary>
-# Rigid-body lecture demo: torque-driven rotating cube.
+# Torque-driven rigid-body rotation demo.
 # </summary>
 # </file>
-"""Rigid-body lecture demo: torque-driven rotating cube."""
+"""Torque-driven rigid-body rotation demo."""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ INERTIA_DIAGONAL = (
 
 
 # <summary>
-# Create the configured rigid cube body for the lecture demo.
+# Create the configured rigid cube body for the rotation demo.
 # </summary>
 # <returns>Computed result described by the return type annotation.</returns>
 def build_cube_body() -> RigidBody3D:
@@ -193,7 +193,7 @@ def overlay_lines(body: RigidBody3D, paused: bool) -> list[str]:
     q = body.orientation
     w = body.angular_velocity
     return [
-        "Lec09 Rigid Body Cube",
+        "Rigid Body Rotation Cube",
         f"State: {'Paused' if paused else 'Running'}",
         f"Mass: {MASS:.1f} kg  Side: {SIDE_LENGTH:.1f} m",
         (

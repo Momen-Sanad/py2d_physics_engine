@@ -1,4 +1,4 @@
-# SWGCG 352 Project Implementation Steps (Updated 2026-04-20)
+# Physics Engine Implementation Steps (Updated 2026-04-20)
 
 ## 1. Locked Scope Decision
 
@@ -103,7 +103,7 @@ python main.py kinematics
 
 ## 9. Bottom Line
 
-1. Scope is stable and low-risk: **2D-first**, with a contained 3D rigid-body lecture demo for Lec09 rotation coverage.
+1. Scope is stable and low-risk: **2D-first**, with a contained 3D rigid-body rotation demo for quaternion and inertia coverage.
 2. Particle, spring/soft-body, and rigid-body demos are already in place.
 3. The next major implementation target is full **PBD**.
 4. After PBD, finish **FK then IK**, then move to final integration.

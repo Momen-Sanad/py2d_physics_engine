@@ -3,7 +3,7 @@
 ## Objective
 
 - Make this repo portfolio-grade via engineering quality, consistency, and presentation.
-- Do not deviate from current course scope.
+- Do not deviate from the current engine and demo scope.
 
 ## Current Implemented State (2026-04-20)
 
