@@ -5,11 +5,12 @@
 - Make this repo portfolio-grade via engineering quality, consistency, and presentation.
 - Do not deviate from the current engine and demo scope.
 
-## Current Implemented State (2026-04-20)
+## Current Implemented State (2026-05-06)
 
-- Runnable launcher demos: `particle`, `spring`, `softbody`, `rigidbody`.
-- `demos/pbd_demo.py` and `demos/kinematics_demo.py` are still placeholders.
-- FK helper logic exists in `engine/kinematics.py`; IK solver is not implemented.
+- Runnable launcher demos: `particle`, `spring`, `softbody`, `pbd`, `rigidbody`, `rigidbody_cube`, `kinematics`.
+- `demos/pbd_demo.py` is an interactive PBD rope demo.
+- `demos/kinematics_demo.py` is an interactive FK/IK arm demo.
+- FK helper logic and CCD IK solving exist in `engine/kinematics.py`.
 - No pytest suite or CI workflow exists yet in this repo.
 - Capture pipeline exists and has particle assets in `captures/`.
 
@@ -18,7 +19,7 @@
 - 2D only.
 - Keep current runnable demos.
 - No large architecture rewrites.
-- PBD/FK/IK remain next-phase items
+- PBD/FK/IK are implemented engine demo modules.
 
 ## Milestones
 
@@ -123,9 +124,6 @@ Next 3 Tasks:
 
 ## Deferred (Post-Polish)
 
-- Full PBD implementation.
-- FK demo scene.
-- IK solver demo.
 - Final multi-module game integration.
 
 ## Test Plan
@@ -133,7 +131,7 @@ Next 3 Tasks:
 1. Markdown renders cleanly on GitHub (headings, checkboxes, code ticks, links).
 2. Every task has measurable "Done When" criteria (no vague wording).
 3. Task ordering supports incremental execution with no blocked first step.
-4. Plan content matches existing repo reality (no claims of finished PBD/FK/IK demos).
+4. Plan content matches existing repo reality, including finished PBD/FK/IK demos.
 
 ## Assumptions and Defaults
 

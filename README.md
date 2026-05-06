@@ -8,8 +8,8 @@ The engine is primarily 2D, with a contained 3D rigid-body rotation demo used to
 
 - Fixed-timestep simulation loop with reusable timing and world-stepping utilities.
 - Vector math, force accumulation, integration helpers, constraints, collisions, and broadphase acceleration.
-- Interactive demos for particles, springs, pressure soft bodies, 2D rigid-body collisions, and 3D rigid-body rotation.
-- Stdlib regression tests for rigid-body inertia, quaternion math, and angular dynamics.
+- Interactive demos for particles, springs, pressure soft bodies, PBD ropes, FK/IK chains, 2D rigid-body collisions, and 3D rigid-body rotation.
+- Stdlib regression tests for PBD constraints, kinematics, rigid-body inertia, quaternion math, and angular dynamics.
 - XML-style code comments across tracked Python files for function, parameter, return, and file-level documentation.
 - Planned playable demo game: a 1v1 physics beach-ball duel using rigid bodies, wind, particles, powerups, and scoring.
 
@@ -23,10 +23,10 @@ The engine is primarily 2D, with a contained 3D rigid-body rotation demo used to
 | Pressure soft body | Implemented demo | Closed spring loop with pressure forces and boundary constraints |
 | Rigid-body dynamics | Implemented demos | 2D circle collisions with broadphase plus a torque-driven cube rotation demo |
 | 3D rotation support | Implemented | `Vec3`, `Mat3`, quaternions, rotation matrices, and common inertia tensor helpers |
-| Tests | Implemented | Stdlib `unittest` coverage for rigid-body math and dynamics |
-| PBD | Scaffolded | `engine/pbd.py` and `demos/pbd_demo.py` are placeholders |
-| FK | Partially scaffolded | `engine/kinematics.py` contains forward-chain helper logic |
-| IK | Planned | Solver and demo still pending |
+| Tests | Implemented | Stdlib `unittest` coverage for PBD, FK/IK, rigid-body math, and dynamics |
+| PBD | Implemented demo | Iterative distance constraints, pins, bounds, velocity reconstruction, and interactive rope demo |
+| FK | Implemented demo | Angle-based chain helpers and interactive manual joint controls |
+| IK | Implemented demo | CCD solver with mouse-target reaching and unreachable-target extension |
 | Demo game | Designed | Beach Ball Duel concept is documented; implementation is planned |
 
 ## Quick Start
@@ -56,8 +56,10 @@ Run a specific demo:
 python main.py particle
 python main.py spring
 python main.py softbody
+python main.py pbd
 python main.py rigidbody
 python main.py rigidbody_cube
+python main.py kinematics
 ```
 
 List available demos:
@@ -172,6 +174,29 @@ Controls:
 - `Space`: pause/resume
 - `Esc`: quit
 
+### PBD Rope Demo
+
+Run:
+
+```bash
+python main.py pbd
+```
+
+Features:
+
+- Position-Based Dynamics rope with pinned endpoints.
+- Iterative distance constraints, secondary bend constraints, and bounds projection.
+- Adjustable solver iterations and mouse dragging for individual rope nodes.
+
+Controls:
+
+- `LMB`: drag nearest movable node
+- `Up` / `Down` or `+` / `-`: solver iterations
+- `R`: reset
+- `Space`: pause/resume
+- `H`: help panel
+- `Esc`: quit
+
 ### Rigid Body Demo
 
 Run:
@@ -217,6 +242,31 @@ Controls:
 - `Q` / `E`: apply torque on Z axis
 - `R`: reset
 - `Space`: pause/resume
+- `Esc`: quit
+
+### FK / IK Kinematics Demo
+
+Run:
+
+```bash
+python main.py kinematics
+```
+
+Features:
+
+- Multi-link forward-kinematics arm with local joint angles.
+- CCD inverse kinematics targeting the mouse position.
+- Reachability feedback while preserving segment lengths.
+
+Controls:
+
+- `Mouse`: IK target
+- `I`: toggle FK/IK mode
+- `J` or `1`-`4`: select joint
+- `Left` / `Right`: rotate selected joint
+- `R`: reset
+- `Space`: pause IK updates
+- `H`: help panel
 - `Esc`: quit
 
 ## Demo Media
@@ -305,8 +355,8 @@ project/
 - `softbody.py`: pressure soft body built on particles and springs.
 - `rigidbody.py`: 2D circle bodies, 2D angular rigid bodies, and 3D quaternion rigid-body state.
 - `broadphase.py`: spatial hash collision candidate generation.
-- `kinematics.py`: forward-kinematics helper scaffolding.
-- `pbd.py`: PBD scaffolding.
+- `kinematics.py`: forward-kinematics chain helpers and CCD inverse-kinematics solver.
+- `pbd.py`: Position-Based Dynamics prediction, constraints, bounds, and velocity reconstruction.
 - `debug.py`: performance overlay utilities.
 
 ## Documentation
@@ -318,8 +368,7 @@ project/
 
 ## Roadmap
 
-1. Complete the PBD solver and replace the placeholder demo with an interactive rope or cloth scene.
-2. Build the FK/IK demo with controllable joints and target reaching.
-3. Implement the Beach Ball Duel demo game using rigid bodies, particles, wind, powerups, and scoring.
-4. Add focused tests for collisions, constraints, particles, springs, and game-state rules.
-5. Capture fresh media for all completed demos, including the rigid-body cube and final game.
+1. Implement the Beach Ball Duel demo game using rigid bodies, particles, wind, powerups, PBD mechanics, and IK interaction.
+2. Add focused tests for collisions, particles, springs, and game-state rules.
+3. Capture fresh media for the PBD, FK/IK, rigid-body cube, and final game demos.
+4. Continue docs and presentation polish for the completed engine modules.

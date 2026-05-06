@@ -1,4 +1,4 @@
-# Physics Engine Implementation Steps (Updated 2026-04-20)
+# Physics Engine Implementation Steps (Updated 2026-05-06)
 
 ## 1. Locked Scope Decision
 
@@ -7,7 +7,7 @@
 3. `pygame` remains the visualization/input layer.
 4. Physics modularity and clean demo isolation remain the grading focus.
 
-## 2. Current Status Snapshot (2026-04-20)
+## 2. Current Status Snapshot (2026-05-06)
 
 | Area | Status | Current Evidence |
 |---|---|---|
@@ -15,9 +15,9 @@
 | Particle demo | Implemented | `demos/particle_demo.py` + launcher key `particle` |
 | Mass-spring demos | Implemented | `demos/spring_demo.py`, `engine/spring.py`, `demos/softbody_demo.py`, `engine/softbody.py` |
 | Rigid body dynamics demos | Implemented | `demos/rigidbody_demo.py`, `demos/rigidbody_cube_demo.py`, `engine/rigidbody.py`, `engine/math3d.py`, `engine/broadphase.py` |
-| PBD | Scaffolded only | `engine/pbd.py` helper types/functions, `demos/pbd_demo.py` placeholder |
-| FK | Scaffolded helper only | `engine/kinematics.py` (`forward_chain`) |
-| IK | Not started | No IK solver/demo integrated yet |
+| PBD | Implemented demo | `engine/pbd.py` solver types/functions, `demos/pbd_demo.py`, launcher key `pbd` |
+| FK | Implemented demo | `engine/kinematics.py` (`forward_chain`, `KinematicChain`), `demos/kinematics_demo.py` |
+| IK | Implemented demo | CCD solver in `engine/kinematics.py`, mouse-target IK behavior in `demos/kinematics_demo.py` |
 | Final integrated game | Not started | No playable multi-module game loop yet |
 
 ## 3. Development Order Policy
@@ -39,21 +39,18 @@ Important ordering rule:
 
 ## 4. Remaining Execution Order From Current State
 
-1. Complete the full PBD module and runnable demo (rope/cloth with constraints).
-2. Build a dedicated FK demo scene (interactive joint chain).
-3. Build IK solver behavior (CCD or FABRIK) into the kinematics demo.
-4. Integrate at least three modules into a final playable scene.
-5. Finalize report and presentation assets.
+1. Integrate at least three modules into a final playable scene.
+2. Finalize report and presentation assets.
+3. Continue cleanup/tests/docs polish.
 
-## 5. Immediate PBD Plan
+## 5. Completed PBD Implementation
 
-1. Extend predicted-position buffers in `engine/pbd.py`.
-2. Add iterative distance constraint projection with configurable iteration count.
-3. Add pin/anchor constraints.
-4. Add boundary/ground handling.
-5. Reconstruct velocities from corrected positions.
-6. Replace placeholder `demos/pbd_demo.py` with an interactive scene.
-7. Compare spring-rope vs PBD-rope behavior in notes/captures.
+1. Predicted-position buffers live in `engine/pbd.py`.
+2. Iterative distance constraint projection supports configurable iteration count.
+3. Pin/anchor constraints are available for fixed or dragged particles.
+4. Boundary handling keeps movable particles inside demo bounds.
+5. Velocities are reconstructed from corrected positions.
+6. `demos/pbd_demo.py` provides an interactive rope scene.
 
 ## 6. Definition of Done for Remaining Modules
 
@@ -90,14 +87,9 @@ From `project/`:
 python main.py particle
 python main.py spring
 python main.py softbody
+python main.py pbd
 python main.py rigidbody
 python main.py rigidbody_cube
-```
-
-Planned additions once implemented:
-
-```bash
-python main.py pbd
 python main.py kinematics
 ```
 
@@ -105,5 +97,5 @@ python main.py kinematics
 
 1. Scope is stable and low-risk: **2D-first**, with a contained 3D rigid-body rotation demo for quaternion and inertia coverage.
 2. Particle, spring/soft-body, and rigid-body demos are already in place.
-3. The next major implementation target is full **PBD**.
-4. After PBD, finish **FK then IK**, then move to final integration.
+3. PBD, FK, and IK are implemented as isolated engine modules with runnable demos.
+4. The next major implementation target is final multi-module game integration and presentation polish.

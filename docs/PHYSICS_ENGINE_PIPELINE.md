@@ -13,7 +13,7 @@ The short-term goal is to build a clean engine with standalone demos for:
 5. Forward kinematics (FK)
 6. Inverse kinematics (IK)
 
-## Current Implementation Snapshot (2026-04-20)
+## Current Implementation Snapshot (2026-05-06)
 
 | Area | Status | Evidence |
 |---|---|---|
@@ -22,9 +22,9 @@ The short-term goal is to build a clean engine with standalone demos for:
 | Mass-spring system | Implemented demo | `demos/spring_demo.py`, `engine/spring.py` |
 | Pressure soft body | Implemented demo | `demos/softbody_demo.py`, `engine/softbody.py` |
 | Rigid body dynamics | Implemented demos | `demos/rigidbody_demo.py`, `demos/rigidbody_cube_demo.py`, `engine/rigidbody.py`, `engine/math3d.py`, `engine/broadphase.py` |
-| PBD | Scaffolded only | `engine/pbd.py`, `demos/pbd_demo.py` placeholder |
-| FK | Scaffolded helper only | `engine/kinematics.py` (`forward_chain`) |
-| IK | Not implemented | No IK solver/demo integrated yet |
+| PBD | Implemented demo | `engine/pbd.py`, `demos/pbd_demo.py`, launcher key `pbd` |
+| FK | Implemented demo | `engine/kinematics.py` (`forward_chain`, `KinematicChain`), `demos/kinematics_demo.py` |
+| IK | Implemented demo | CCD solver in `engine/kinematics.py`, target-reaching behavior in `demos/kinematics_demo.py` |
 
 ## File Structure
 
@@ -64,14 +64,15 @@ project/
 
 ## Extracted Reference Systems
 
-The repo currently has these runnable and scaffolded systems:
+The repo currently has these runnable systems:
 
 1. Interactive particle playground in `demos/particle_demo.py`
 2. Falling spring-net demo in `demos/spring_demo.py`
 3. Pressure-based soft-body demo in `demos/softbody_demo.py`
 4. Circle rigid-body demo with broadphase in `demos/rigidbody_demo.py`
 5. Cube rigid-body rotation demo in `demos/rigidbody_cube_demo.py`
-6. PBD/FK module scaffolding in `engine/pbd.py` and `engine/kinematics.py`
+6. PBD rope demo in `demos/pbd_demo.py`
+7. FK/IK arm demo in `demos/kinematics_demo.py`
 
 ## Development Rules
 
@@ -140,7 +141,7 @@ Definition of done:
 2. Stiffness and damping are adjustable.
 3. The spring network does not explode immediately under gravity.
 
-### Stage 4: PBD (scaffolded, not complete)
+### Stage 4: PBD (implemented)
 
 Build after the spring demo:
 
@@ -175,7 +176,7 @@ Definition of done:
 3. You can spawn or launch rigid bodies in a demo scene.
 4. A torque-driven cube demo shows quaternion-normalized 3D orientation and projected rotation.
 
-### Stage 6: kinematics (FK scaffolded, IK pending)
+### Stage 6: kinematics (implemented)
 
 Build after rigid bodies:
 
@@ -223,10 +224,9 @@ development order:
 
 Remaining order from the current repo state:
 
-1. Finish full PBD module + runnable demo.
-2. Build a dedicated FK demo scene.
-3. Add IK solver + target-driven demo behavior.
-4. Continue engine cleanup/tests/docs polish.
+1. Continue engine cleanup/tests/docs polish.
+2. Integrate completed modules into a final playable scene.
+3. Finalize report and presentation assets.
 
 ## Suggested Weekly Breakdown
 
