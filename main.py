@@ -13,10 +13,12 @@ import sys
 
 DEMO_MODULES = {
     "particle": "demos.particle_demo",
+    "pbd": "demos.pbd_demo",
     "spring": "demos.spring_demo",
     "softbody": "demos.softbody_demo",
     "rigidbody": "demos.rigidbody_demo",
     "rigidbody_cube": "demos.rigidbody_cube_demo",
+    "kinematics": "demos.kinematics_demo",
 }
 
 
