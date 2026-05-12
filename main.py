@@ -12,6 +12,7 @@ import sys
 
 
 DEMO_MODULES = {
+    "splashline": "demos.splashline_showdown_demo",
     "particle": "demos.particle_demo",
     "pbd": "demos.pbd_demo",
     "spring": "demos.spring_demo",
