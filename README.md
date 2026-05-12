@@ -11,7 +11,7 @@ The engine is primarily 2D, with a contained 3D rigid-body rotation demo used to
 - Interactive demos for particles, springs, pressure soft bodies, PBD ropes, FK/IK chains, 2D rigid-body collisions, and 3D rigid-body rotation.
 - Stdlib regression tests for PBD constraints, kinematics, rigid-body inertia, quaternion math, and angular dynamics.
 - XML-style code comments across tracked Python files for function, parameter, return, and file-level documentation.
-- Planned playable demo game: a 1v1 physics beach-ball duel using rigid bodies, wind, particles, powerups, and scoring.
+- Playable Splashline Showdown demo built on the engine's rigid-body, particle, broadphase, and collision systems.
 
 ## Current Status
 
@@ -27,7 +27,7 @@ The engine is primarily 2D, with a contained 3D rigid-body rotation demo used to
 | PBD | Implemented demo | Iterative distance constraints, pins, bounds, velocity reconstruction, and interactive rope demo |
 | FK | Implemented demo | Angle-based chain helpers and interactive manual joint controls |
 | IK | Implemented demo | CCD solver with mouse-target reaching and unreachable-target extension |
-| Demo game | Designed | Beach Ball Duel concept is documented; implementation is planned |
+| Demo game | Implemented | `python main.py splashline` launches Splashline Showdown, a playable 1v1 beach-ball duel |
 
 ## Quick Start
 
@@ -53,6 +53,7 @@ python main.py
 Run a specific demo:
 
 ```bash
+python main.py splashline
 python main.py particle
 python main.py spring
 python main.py softbody
@@ -72,12 +73,12 @@ python main.py --help
 
 ```bash
 python -m unittest discover -s tests
-python -m compileall engine demos main.py media_capture.py tests
+python -m compileall engine demos game main.py media_capture.py tests
 ```
 
 ## Demo Game Concept
 
-The planned playable integration is **2D Physics Beach Ball Duel**, a 1v1 arcade physics game where players use projectile shots to redirect an air-filled beach ball over a net.
+The playable integration is **Splashline Showdown**, a 1v1 arcade physics game where players use projectile shots to redirect an air-filled beach ball over a net.
 
 Core idea:
 
@@ -100,6 +101,32 @@ MVP target:
 The full concept is documented in [docs/DEMO_GAME_CONCEPT.md](docs/DEMO_GAME_CONCEPT.md).
 
 ## Demo Guide
+
+### Splashline Showdown
+
+Run:
+
+```bash
+python main.py splashline
+```
+
+Features:
+
+- Turn-based 1v1 projectile duels over a center net.
+- Rigid-body beach ball and projectile collisions using the shared engine broadphase and impulse response.
+- Randomized wind, drip particles, splash feedback, score/timer HUD, and three powerups.
+- Powerups can be activated by either the ball or a player projectile.
+
+Controls:
+
+- `A / D` or `Left / Right`: move active player
+- `Mouse`: aim
+- `Left Click`: shoot
+- `Space`: pause/resume
+- `O`: toggle the top-left debug overlay
+- `H`: help
+- `R`: restart match
+- `Esc`: quit
 
 ### Particle Demo
 
@@ -324,6 +351,16 @@ project/
 |   |-- rigidbody.py
 |   |-- softbody.py
 |   |-- spring.py
+|-- game/
+|   |-- config.py
+|   |-- effects.py
+|   |-- entities.py
+|   |-- input.py
+|   |-- physics.py
+|   |-- powerups.py
+|   |-- scene.py
+|   |-- state.py
+|   |-- ui.py
 |-- demos/
 |   |-- base_demo.py
 |   |-- kinematics_demo.py
@@ -331,14 +368,17 @@ project/
 |   |-- pbd_demo.py
 |   |-- rigidbody_cube_demo.py
 |   |-- rigidbody_demo.py
+|   |-- splashline_showdown_demo.py
 |   |-- softbody_demo.py
 |   |-- spring_demo.py
 |-- docs/
 |   |-- DEMO_GAME_CONCEPT.md
 |   |-- PHYSICS_ENGINE_PIPELINE.md
-|   |-- PORTFOLIO_POLISH_PLAN.md
 |-- tests/
+|   |-- test_game_physics.py
+|   |-- test_game_state.py
 |   |-- test_rigidbody.py
+|   |-- test_powerups.py
 ```
 
 ### Engine Modules
@@ -361,14 +401,11 @@ project/
 
 ## Documentation
 
-- [docs/DEMO_GAME_CONCEPT.md](docs/DEMO_GAME_CONCEPT.md): planned playable demo game.
+- [docs/DEMO_GAME_CONCEPT.md](docs/DEMO_GAME_CONCEPT.md): Splashline Showdown concept and gameplay target.
 - [docs/PHYSICS_ENGINE_PIPELINE.md](docs/PHYSICS_ENGINE_PIPELINE.md): engine development pipeline.
-- [PROJECT_IMPLEMENTATION_STEPS.md](PROJECT_IMPLEMENTATION_STEPS.md): implementation milestones.
-- [optimizations.md](optimizations.md): performance notes.
 
-## Roadmap
+## Next Steps
 
-1. Implement the Beach Ball Duel demo game using rigid bodies, particles, wind, powerups, PBD mechanics, and IK interaction.
-2. Add focused tests for collisions, particles, springs, and game-state rules.
-3. Capture fresh media for the PBD, FK/IK, rigid-body cube, and final game demos.
-4. Continue docs and presentation polish for the completed engine modules.
+1. Capture fresh media for Splashline Showdown and the remaining engine demos.
+2. Add launcher smoke coverage and a lightweight CI workflow.
+3. Continue engine and presentation polish around the completed feature set.
