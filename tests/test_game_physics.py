@@ -112,7 +112,7 @@ class GamePhysicsTests(unittest.TestCase):
         update_drip_intensity(ball, impact_speed=900.0, dt=0.0)
         self.assertLessEqual(ball.drip_intensity, 1.0)
 
-    def test_shot_depletion_does_not_snap_turn_back_to_same_side(self) -> None:
+    def test_final_shot_waits_for_cross_before_refill(self) -> None:
         scene = SplashlineScene()
         scene.ball.body.position.set(scene.arena.net_x - 150.0, scene.arena.serve_y)
         scene.ball.last_side = PlayerId.LEFT
@@ -130,8 +130,58 @@ class GamePhysicsTests(unittest.TestCase):
             config.FIXED_DT,
         )
 
+        self.assertEqual(scene.match.turn.active_player, PlayerId.LEFT)
+        self.assertEqual(scene.match.turn.shots_left, 0)
+        self.assertTrue(scene.match.turn.awaiting_cross)
+
+    def test_ball_crossing_refills_waiting_opponent(self) -> None:
+        scene = SplashlineScene()
+        scene.wind.current_force_x = 0.0
+        scene.ball.body.position.set(scene.arena.net_x + 80.0, scene.arena.serve_y)
+        scene.ball.body.velocity.reset()
+        scene.ball.last_side = PlayerId.LEFT
+        scene.match.turn.active_player = PlayerId.LEFT
+        scene.match.turn.shots_left = 0
+        scene.match.turn.awaiting_cross = True
+        scene.allow_turn_side_sync = False
+
+        scene.step(
+            InputState(
+                move_axis=0.0,
+                aim_world=Vec2(scene.arena.net_x, scene.arena.serve_y),
+                fire_pressed=False,
+            ),
+            config.FIXED_DT,
+        )
+
         self.assertEqual(scene.match.turn.active_player, PlayerId.RIGHT)
         self.assertEqual(scene.match.turn.shots_left, config.SHOTS_PER_TURN)
+        self.assertFalse(scene.match.turn.awaiting_cross)
+
+    def test_out_of_ammo_failsafe_switches_control(self) -> None:
+        scene = SplashlineScene()
+        scene.wind.current_force_x = 0.0
+        scene.ball.body.position.set(scene.arena.net_x - 150.0, scene.arena.serve_y)
+        scene.ball.body.velocity.reset()
+        scene.ball.last_side = PlayerId.LEFT
+        scene.match.turn.active_player = PlayerId.LEFT
+        scene.match.turn.shots_left = 0
+        scene.match.turn.awaiting_cross = True
+        scene.match.turn.out_of_ammo_timer = config.OUT_OF_AMMO_TURN_FAILSAFE
+        scene.allow_turn_side_sync = False
+
+        scene.step(
+            InputState(
+                move_axis=0.0,
+                aim_world=Vec2(scene.arena.net_x, scene.arena.serve_y),
+                fire_pressed=False,
+            ),
+            config.FIXED_DT,
+        )
+
+        self.assertEqual(scene.match.turn.active_player, PlayerId.RIGHT)
+        self.assertEqual(scene.match.turn.shots_left, config.SHOTS_PER_TURN)
+        self.assertFalse(scene.match.turn.awaiting_cross)
 
 
 if __name__ == "__main__":

@@ -47,6 +47,8 @@ class TurnState:
     active_player: PlayerId
     shots_left: int
     cooldown_remaining: float = 0.0
+    awaiting_cross: bool = False
+    out_of_ammo_timer: float = 0.0
 
 
 @dataclass(slots=True)
@@ -116,6 +118,8 @@ def reset_rally(match: MatchState, starting_player: PlayerId | None = None) -> N
     match.turn.active_player = starting_player
     match.turn.shots_left = match.shots_per_turn
     match.turn.cooldown_remaining = 0.0
+    match.turn.awaiting_cross = False
+    match.turn.out_of_ammo_timer = 0.0
 
 
 def switch_turn(match: MatchState) -> PlayerId:
@@ -124,6 +128,8 @@ def switch_turn(match: MatchState) -> PlayerId:
     match.turn.active_player = match.turn.active_player.opponent()
     match.turn.shots_left = match.shots_per_turn
     match.turn.cooldown_remaining = 0.0
+    match.turn.awaiting_cross = False
+    match.turn.out_of_ammo_timer = 0.0
     return match.turn.active_player
 
 

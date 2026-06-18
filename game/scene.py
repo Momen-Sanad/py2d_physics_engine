@@ -119,6 +119,13 @@ class SplashlineScene:
         reset_rally(self.match, starting_player=starting_player)
         reset_ball(self.ball, self.arena, self.rng)
 
+    def switch_control(self) -> PlayerId:
+        """Switch active player control and prevent immediate side resync."""
+
+        active_player = switch_turn(self.match)
+        self.allow_turn_side_sync = False
+        return active_player
+
     def step(self, input_state: InputState, dt: float) -> None:
         """Advance gameplay by one fixed update step."""
 
@@ -165,8 +172,6 @@ class SplashlineScene:
             if spawned:
                 self.allow_turn_side_sync = False
                 self.projectiles.extend(spawned)
-                if self.match.turn.shots_left <= 0:
-                    switch_turn(self.match)
 
         self.powerup_spawn_timer -= dt
         if self.powerup_spawn_timer <= 0.0:
@@ -189,21 +194,28 @@ class SplashlineScene:
 
         resolve_arena_bounds(self.ball, self.projectiles, self.arena, dt)
         previous_side, current_side = update_ball_side(self.ball, self.arena)
+        turn_switched = False
         if (
             check_turn_cross_net(self.match.turn.active_player, previous_side, current_side)
             or (
                 self.allow_turn_side_sync
                 and should_sync_turn_to_ball_side(
-                self.match.turn.active_player,
-                current_side,
-                self.ball.body.position.x,
-                self.arena.net_x,
-                settle_distance=self.ball.body.radius + self.arena.net_width,
-            )
+                    self.match.turn.active_player,
+                    current_side,
+                    self.ball.body.position.x,
+                    self.arena.net_x,
+                    settle_distance=self.ball.body.radius + self.arena.net_width,
+                )
             )
         ):
-            switch_turn(self.match)
-            self.allow_turn_side_sync = False
+            self.switch_control()
+            turn_switched = True
+
+        turn = self.match.turn
+        if not turn_switched and turn.awaiting_cross:
+            turn.out_of_ammo_timer += dt
+            if turn.out_of_ammo_timer >= config.OUT_OF_AMMO_TURN_FAILSAFE:
+                self.switch_control()
 
         collect_powerups(
             self.ball,

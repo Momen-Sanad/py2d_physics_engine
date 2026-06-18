@@ -58,6 +58,9 @@ def consume_shot_or_reject(turn: TurnState) -> bool:
     if turn.cooldown_remaining > 0.0 or turn.shots_left <= 0:
         return False
     turn.shots_left -= 1
+    if turn.shots_left <= 0:
+        turn.awaiting_cross = True
+        turn.out_of_ammo_timer = 0.0
     return True
 
 

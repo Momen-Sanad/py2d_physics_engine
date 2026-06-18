@@ -218,8 +218,8 @@ def draw_hud(
     surface.blit(right_score, (config.WINDOW_WIDTH - 82 - right_score.get_width(), 28))
     surface.blit(timer_surface, (config.WINDOW_WIDTH * 0.5 - timer_surface.get_width() * 0.5, 28))
 
-    turn_name = "Left" if match.turn.active_player is PlayerId.LEFT else "Right"
-    status = f"Turn: {turn_name}  Shots: {match.turn.shots_left}  Cooldown: {match.turn.cooldown_remaining:0.2f}s"
+    control_name = "Left" if match.turn.active_player is PlayerId.LEFT else "Right"
+    status = f"Control: {control_name}  Shots: {match.turn.shots_left}  Cooldown: {match.turn.cooldown_remaining:0.2f}s"
     phase = "Sudden Death" if match.sudden_death and match.winner is None else match.phase.value.replace("_", " ").title()
     wind_label = _wind_label(active_effects, wind.current_force_x)
 

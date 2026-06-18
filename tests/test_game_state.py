@@ -37,6 +37,8 @@ class MatchStateTests(unittest.TestCase):
         self.assertEqual(active, PlayerId.RIGHT)
         self.assertEqual(match.turn.shots_left, 2)
         self.assertEqual(match.turn.cooldown_remaining, 0.0)
+        self.assertFalse(match.turn.awaiting_cross)
+        self.assertEqual(match.turn.out_of_ammo_timer, 0.0)
 
     def test_reset_rally_hands_next_turn_to_point_loser(self) -> None:
         match = _build_match()
