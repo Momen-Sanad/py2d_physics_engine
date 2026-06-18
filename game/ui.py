@@ -10,6 +10,7 @@ from . import config
 from .effects import DripEmitter, WindState
 from .entities import Arena, Ball, Projectile
 from .powerups import ActiveEffect, PowerupKind, PowerupPickup
+from .screens import MenuItem
 from .state import MatchPhase, MatchState, PlayerId, PlayerState
 
 
@@ -260,6 +261,198 @@ def draw_game_over(surface, fonts: dict[str, object], match: MatchState) -> None
         x = config.WINDOW_WIDTH * 0.5 - line.get_width() * 0.5
         surface.blit(line, (x, y))
         y += line.get_height() + 10
+
+
+def draw_start_overlay(
+    surface,
+    fonts: dict[str, object],
+    items: list[MenuItem],
+    selected_index: int,
+) -> None:
+    """Draw the first player-facing overlay."""
+
+    _draw_menu_overlay(
+        surface,
+        fonts,
+        "Splashline Showdown",
+        "Local beach-ball physics duel",
+        [
+            "Fire projectiles to knock the beach ball over the net.",
+            "First to the score cap wins before the tide turns.",
+        ],
+        items,
+        selected_index,
+    )
+
+
+def draw_pause_overlay(
+    surface,
+    fonts: dict[str, object],
+    items: list[MenuItem],
+    selected_index: int,
+) -> None:
+    """Draw the paused-game overlay."""
+
+    _draw_menu_overlay(
+        surface,
+        fonts,
+        "Paused",
+        "Gameplay is frozen",
+        [],
+        items,
+        selected_index,
+    )
+
+
+def draw_how_to_play_overlay(
+    surface,
+    fonts: dict[str, object],
+    items: list[MenuItem],
+    selected_index: int,
+) -> None:
+    """Draw concise controls and objective text."""
+
+    _draw_menu_overlay(
+        surface,
+        fonts,
+        "How To Play",
+        "Controls",
+        [
+            "Objective: score when the ball lands in the opponent water.",
+            "Move: A/D or Left/Right.",
+            "Aim: mouse. Shoot: left click.",
+            "Each possession gets 3 shots.",
+            "Control changes when the ball crosses the net.",
+            "Esc pauses or goes back from menus.",
+        ],
+        items,
+        selected_index,
+    )
+
+
+def draw_powerups_overlay(
+    surface,
+    fonts: dict[str, object],
+    items: list[MenuItem],
+    selected_index: int,
+) -> None:
+    """Draw the powerup reference overlay."""
+
+    _draw_menu_overlay(
+        surface,
+        fonts,
+        "Powerups",
+        "Touch pickups with the ball or a projectile",
+        [
+            f"{PowerupKind.HEAVY_SHOT.label()}: next shot is heavier and faster.",
+            f"{PowerupKind.DOUBLE_SHOT.label()}: next shot fires two projectiles.",
+            f"{PowerupKind.NULL_WIND.label()}: temporarily cancels wind.",
+            "Ball pickups go to the controlling player.",
+            "Projectile pickups go to the projectile owner.",
+        ],
+        items,
+        selected_index,
+    )
+
+
+def draw_options_placeholder_overlay(
+    surface,
+    fonts: dict[str, object],
+    items: list[MenuItem],
+    selected_index: int,
+) -> None:
+    """Draw the temporary options overlay before audio settings are wired."""
+
+    _draw_menu_overlay(
+        surface,
+        fonts,
+        "Options",
+        "Audio controls are added in the next release step",
+        [],
+        items,
+        selected_index,
+    )
+
+
+def draw_game_over_menu_overlay(
+    surface,
+    fonts: dict[str, object],
+    match: MatchState,
+    items: list[MenuItem],
+    selected_index: int,
+) -> None:
+    """Draw winner text with restart/menu actions."""
+
+    winner_name = "Left Player" if match.winner is PlayerId.LEFT else "Right Player"
+    _draw_menu_overlay(
+        surface,
+        fonts,
+        f"{winner_name} Wins",
+        f"Final Score {match.left_player.score} - {match.right_player.score}",
+        [],
+        items,
+        selected_index,
+    )
+
+
+def _draw_menu_overlay(
+    surface,
+    fonts: dict[str, object],
+    title: str,
+    subtitle: str,
+    lines: list[str],
+    items: list[MenuItem],
+    selected_index: int,
+) -> None:
+    """Draw a centered translucent menu panel."""
+
+    import pygame
+
+    overlay = pygame.Surface((config.WINDOW_WIDTH, config.WINDOW_HEIGHT), pygame.SRCALPHA)
+    overlay.fill((8, 15, 24, 126))
+    surface.blit(overlay, (0, 0))
+
+    panel_width = 560
+    line_height = 28
+    menu_height = len(items) * 34
+    text_height = len(lines) * line_height
+    panel_height = 136 + text_height + menu_height
+    panel_height = max(260, panel_height)
+    panel = pygame.Surface((panel_width, panel_height), pygame.SRCALPHA)
+    panel.fill((18, 30, 45, 218))
+    panel_rect = panel.get_rect(center=(config.WINDOW_WIDTH // 2, config.WINDOW_HEIGHT // 2))
+    surface.blit(panel, panel_rect)
+    pygame.draw.rect(surface, (255, 255, 255), panel_rect, 2, border_radius=8)
+
+    title_font = fonts["title"]
+    body_font = fonts["body"]
+    small_font = fonts["small"]
+
+    y = panel_rect.top + 26
+    title_surface = title_font.render(title, True, (255, 246, 204))
+    surface.blit(title_surface, (panel_rect.centerx - title_surface.get_width() * 0.5, y))
+    y += title_surface.get_height() + 8
+
+    if subtitle:
+        subtitle_surface = body_font.render(subtitle, True, (221, 246, 255))
+        surface.blit(subtitle_surface, (panel_rect.centerx - subtitle_surface.get_width() * 0.5, y))
+        y += subtitle_surface.get_height() + 18
+    else:
+        y += 14
+
+    for line in lines:
+        text_surface = small_font.render(line, True, (246, 247, 249))
+        surface.blit(text_surface, (panel_rect.left + 38, y))
+        y += line_height
+
+    y += 12
+    for index, item in enumerate(items):
+        selected = index == selected_index
+        color = (255, 244, 201) if selected else (246, 247, 249)
+        prefix = "> " if selected else "  "
+        item_surface = body_font.render(f"{prefix}{item.label}", True, color)
+        surface.blit(item_surface, (panel_rect.left + 180, y))
+        y += 34
 
 
 def draw_help(surface, font) -> None:

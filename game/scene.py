@@ -52,8 +52,60 @@ from .powerups import (
     spawn_powerup,
     tick_pickups,
 )
+from .screens import MenuAction, MenuItem, ScreenMode, clamp_menu_index
 from .state import MatchPhase, MatchState, PlayerId, award_point, reset_rally, start_match, switch_turn, tick_match_timer
-from .ui import draw_arena, draw_ball, draw_game_over, draw_help, draw_hud, draw_particles, draw_players, draw_powerups, draw_projectiles
+from .ui import (
+    draw_arena,
+    draw_ball,
+    draw_game_over_menu_overlay,
+    draw_how_to_play_overlay,
+    draw_hud,
+    draw_options_placeholder_overlay,
+    draw_particles,
+    draw_pause_overlay,
+    draw_players,
+    draw_powerups,
+    draw_powerups_overlay,
+    draw_projectiles,
+    draw_start_overlay,
+)
+
+
+START_MENU = [
+    MenuItem("Start", MenuAction.START_GAME),
+    MenuItem("How To Play", MenuAction.HOW_TO_PLAY),
+    MenuItem("Powerups", MenuAction.POWERUPS),
+    MenuItem("Options", MenuAction.OPTIONS),
+    MenuItem("Exit", MenuAction.EXIT),
+]
+PAUSE_MENU = [
+    MenuItem("Resume", MenuAction.RESUME),
+    MenuItem("Restart Match", MenuAction.RESTART),
+    MenuItem("How To Play", MenuAction.HOW_TO_PLAY),
+    MenuItem("Powerups", MenuAction.POWERUPS),
+    MenuItem("Options", MenuAction.OPTIONS),
+    MenuItem("Exit", MenuAction.EXIT),
+]
+GAME_OVER_MENU = [
+    MenuItem("Restart", MenuAction.RESTART),
+    MenuItem("Main Menu", MenuAction.MAIN_MENU),
+    MenuItem("Exit", MenuAction.EXIT),
+]
+BACK_MENU = [MenuItem("Back", MenuAction.BACK)]
+
+
+def menu_items_for(screen_mode: ScreenMode) -> list[MenuItem]:
+    """Return keyboard menu rows for the active overlay."""
+
+    if screen_mode is ScreenMode.START:
+        return START_MENU
+    if screen_mode is ScreenMode.PAUSED:
+        return PAUSE_MENU
+    if screen_mode is ScreenMode.GAME_OVER:
+        return GAME_OVER_MENU
+    if screen_mode in {ScreenMode.HOW_TO_PLAY, ScreenMode.POWERUPS, ScreenMode.OPTIONS}:
+        return BACK_MENU
+    return []
 
 
 class SplashlineScene:
@@ -258,10 +310,60 @@ def run() -> None:
     }
 
     scene = SplashlineScene()
-    paused = False
-    show_help = True
-    show_overlay = True
+    screen_mode = ScreenMode.START
+    return_mode = ScreenMode.START
+    selected_index = 0
+    show_overlay = False
     running = True
+
+    def set_screen(next_mode: ScreenMode) -> None:
+        nonlocal screen_mode, selected_index
+
+        screen_mode = next_mode
+        selected_index = 0
+
+    def handle_menu_action(action: MenuAction) -> None:
+        nonlocal return_mode, running, scene
+
+        if action is MenuAction.START_GAME:
+            scene = SplashlineScene()
+            set_screen(ScreenMode.PLAYING)
+        elif action is MenuAction.RESUME:
+            set_screen(ScreenMode.PLAYING)
+        elif action is MenuAction.RESTART:
+            scene = SplashlineScene()
+            set_screen(ScreenMode.PLAYING)
+        elif action is MenuAction.HOW_TO_PLAY:
+            return_mode = screen_mode
+            set_screen(ScreenMode.HOW_TO_PLAY)
+        elif action is MenuAction.POWERUPS:
+            return_mode = screen_mode
+            set_screen(ScreenMode.POWERUPS)
+        elif action is MenuAction.OPTIONS:
+            return_mode = screen_mode
+            set_screen(ScreenMode.OPTIONS)
+        elif action is MenuAction.MAIN_MENU:
+            scene = SplashlineScene()
+            set_screen(ScreenMode.START)
+        elif action is MenuAction.BACK:
+            set_screen(return_mode)
+        elif action is MenuAction.EXIT:
+            running = False
+
+    def handle_escape() -> None:
+        nonlocal running, scene
+
+        if screen_mode is ScreenMode.PLAYING:
+            set_screen(ScreenMode.PAUSED)
+        elif screen_mode is ScreenMode.PAUSED:
+            set_screen(ScreenMode.PLAYING)
+        elif screen_mode is ScreenMode.START:
+            running = False
+        elif screen_mode is ScreenMode.GAME_OVER:
+            scene = SplashlineScene()
+            set_screen(ScreenMode.START)
+        else:
+            set_screen(return_mode)
 
     while running:
         frame_time = min(clock.tick(config.RENDER_FPS) / 1000.0, 0.25)
@@ -275,21 +377,34 @@ def run() -> None:
                 if capture.handle_keydown(event, screen):
                     continue
                 if event.key == pygame.K_ESCAPE:
-                    running = False
-                elif event.key == pygame.K_SPACE:
-                    paused = not paused
+                    handle_escape()
+                elif event.key == pygame.K_SPACE and screen_mode is ScreenMode.PLAYING:
+                    set_screen(ScreenMode.PAUSED)
                 elif event.key == pygame.K_h:
-                    show_help = not show_help
+                    if screen_mode is ScreenMode.HOW_TO_PLAY:
+                        set_screen(return_mode)
+                    else:
+                        return_mode = screen_mode
+                        set_screen(ScreenMode.HOW_TO_PLAY)
                 elif event.key == pygame.K_o:
                     show_overlay = not show_overlay
                 elif event.key == pygame.K_r:
                     scene = SplashlineScene()
-                    paused = False
+                    set_screen(ScreenMode.PLAYING)
+                elif screen_mode is not ScreenMode.PLAYING:
+                    items = menu_items_for(screen_mode)
+                    if event.key in (pygame.K_UP, pygame.K_w):
+                        selected_index = clamp_menu_index(selected_index - 1, len(items))
+                    elif event.key in (pygame.K_DOWN, pygame.K_s):
+                        selected_index = clamp_menu_index(selected_index + 1, len(items))
+                    elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE):
+                        if items:
+                            handle_menu_action(items[selected_index].action)
 
         keys = pygame.key.get_pressed()
         frame_input = read_input(events, keys, mouse_pos)
 
-        if not paused:
+        if screen_mode is ScreenMode.PLAYING:
             fire_consumed = False
             for _ in range(simulation_clock.consume(frame_time)):
                 step_input = InputState(
@@ -300,6 +415,8 @@ def run() -> None:
                 )
                 scene.step(step_input, config.FIXED_DT)
                 fire_consumed = True
+            if scene.match.phase is MatchPhase.GAME_OVER:
+                set_screen(ScreenMode.GAME_OVER)
 
         draw_arena(screen, scene.arena)
         draw_powerups(screen, scene.pickups)
@@ -313,7 +430,21 @@ def run() -> None:
         draw_projectiles(screen, scene.projectiles)
         draw_ball(screen, scene.ball)
         draw_hud(screen, fonts, scene.match, scene.wind, scene.active_effects)
-        draw_game_over(screen, fonts, scene.match)
+
+        items = menu_items_for(screen_mode)
+        selected_index = clamp_menu_index(selected_index, len(items))
+        if screen_mode is ScreenMode.START:
+            draw_start_overlay(screen, fonts, items, selected_index)
+        elif screen_mode is ScreenMode.PAUSED:
+            draw_pause_overlay(screen, fonts, items, selected_index)
+        elif screen_mode is ScreenMode.HOW_TO_PLAY:
+            draw_how_to_play_overlay(screen, fonts, items, selected_index)
+        elif screen_mode is ScreenMode.POWERUPS:
+            draw_powerups_overlay(screen, fonts, items, selected_index)
+        elif screen_mode is ScreenMode.OPTIONS:
+            draw_options_placeholder_overlay(screen, fonts, items, selected_index)
+        elif screen_mode is ScreenMode.GAME_OVER:
+            draw_game_over_menu_overlay(screen, fonts, scene.match, items, selected_index)
 
         if show_overlay:
             overlay_lines = [
@@ -322,9 +453,6 @@ def run() -> None:
             ]
             overlay_lines.extend(capture.overlay_lines())
             overlay.draw(screen, frame_time, config.FIXED_DT, extra_lines=overlay_lines)
-
-        if show_help:
-            draw_help(screen, fonts["small"])
 
         capture.update(screen, frame_time)
         pygame.display.flip()
