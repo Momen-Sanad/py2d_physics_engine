@@ -28,6 +28,8 @@ class MenuAction(str, Enum):
     POWERUPS = "powerups"
     OPTIONS = "options"
     MAIN_MENU = "main_menu"
+    SFX_VOLUME = "sfx_volume"
+    MUTE = "mute"
     BACK = "back"
     EXIT = "exit"
 

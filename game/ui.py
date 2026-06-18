@@ -10,7 +10,8 @@ from . import config
 from .effects import DripEmitter, WindState
 from .entities import Arena, Ball, Projectile
 from .powerups import ActiveEffect, PowerupKind, PowerupPickup
-from .screens import MenuItem
+from .screens import MenuAction, MenuItem
+from .settings import GameSettings
 from .state import MatchPhase, MatchState, PlayerId, PlayerState
 
 
@@ -355,21 +356,36 @@ def draw_powerups_overlay(
     )
 
 
-def draw_options_placeholder_overlay(
+def draw_options_overlay(
     surface,
     fonts: dict[str, object],
+    settings: GameSettings,
     items: list[MenuItem],
     selected_index: int,
 ) -> None:
-    """Draw the temporary options overlay before audio settings are wired."""
+    """Draw the runtime audio options overlay."""
+
+    display_items: list[MenuItem] = []
+    for item in items:
+        if item.action is MenuAction.SFX_VOLUME:
+            label = f"SFX Volume: {int(round(settings.sfx_volume * 100.0))}%"
+        elif item.action is MenuAction.MUTE:
+            label = f"Mute: {'On' if settings.muted else 'Off'}"
+        else:
+            label = item.label
+        display_items.append(MenuItem(label, item.action))
 
     _draw_menu_overlay(
         surface,
         fonts,
         "Options",
-        "Audio controls are added in the next release step",
-        [],
-        items,
+        "Audio",
+        [
+            "Up/Down selects an option.",
+            "Left/Right adjusts SFX volume.",
+            "Enter toggles mute.",
+        ],
+        display_items,
         selected_index,
     )
 
