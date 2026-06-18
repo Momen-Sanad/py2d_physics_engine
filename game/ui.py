@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from math import cos, sin, tau
+
 from engine.math2d import Vec2
 
 from . import config
@@ -16,6 +18,14 @@ SAND_COLOR = (241, 229, 186)
 WATER_COLOR = (57, 143, 205)
 NET_COLOR = (246, 248, 252)
 LINE_COLOR = (255, 255, 255)
+BEACH_BALL_PANELS = (
+    (255, 255, 255),
+    (255, 104, 84),
+    (255, 217, 82),
+    (61, 152, 235),
+    (255, 255, 255),
+    (71, 205, 190),
+)
 
 
 def draw_arena(surface, arena: Arena) -> None:
@@ -83,27 +93,51 @@ def draw_players(
 
 
 def draw_ball(surface, ball: Ball) -> None:
-    """Draw the central beach ball with a simple stripe."""
+    """Draw the central ball as a colorful beach ball."""
 
     import pygame
 
-    position = ball.body.position.to_tuple()
+    center_x = int(round(ball.body.position.x))
+    center_y = int(round(ball.body.position.y))
+    position = (center_x, center_y)
     radius = int(ball.body.radius)
-    pygame.draw.circle(surface, (255, 247, 213), position, radius)
-    pygame.draw.circle(surface, (255, 255, 255), position, radius, 2)
-    pygame.draw.arc(
-        surface,
-        (255, 131, 104),
-        (
-            ball.body.position.x - ball.body.radius,
-            ball.body.position.y - ball.body.radius,
-            ball.body.radius * 2.0,
-            ball.body.radius * 2.0,
-        ),
-        0.5,
-        3.2,
-        4,
+    rotation = (ball.body.position.x * 0.035 + ball.body.position.y * 0.012) % tau
+    panel_step = tau / len(BEACH_BALL_PANELS)
+
+    pygame.draw.circle(surface, (255, 255, 255), position, radius)
+    for index, color in enumerate(BEACH_BALL_PANELS):
+        start_angle = rotation + index * panel_step
+        end_angle = start_angle + panel_step
+        points = [position]
+        for segment in range(8):
+            t = segment / 7.0
+            angle = start_angle + (end_angle - start_angle) * t
+            points.append(
+                (
+                    int(round(center_x + cos(angle) * radius)),
+                    int(round(center_y + sin(angle) * radius)),
+                )
+            )
+        pygame.draw.polygon(surface, color, points)
+
+    for index in range(len(BEACH_BALL_PANELS)):
+        angle = rotation + index * panel_step
+        end = (
+            int(round(center_x + cos(angle) * radius)),
+            int(round(center_y + sin(angle) * radius)),
+        )
+        pygame.draw.line(surface, (255, 255, 255), position, end, 2)
+
+    center_radius = max(5, int(radius * 0.22))
+    pygame.draw.circle(surface, (255, 255, 255), position, center_radius)
+    pygame.draw.circle(surface, (218, 231, 238), position, center_radius, 1)
+    pygame.draw.circle(surface, (255, 255, 255), position, radius, 3)
+    pygame.draw.circle(surface, (54, 78, 104), position, radius, 1)
+    highlight = (
+        int(round(center_x - radius * 0.32)),
+        int(round(center_y - radius * 0.36)),
     )
+    pygame.draw.circle(surface, (255, 255, 255), highlight, max(3, int(radius * 0.12)))
 
 
 def draw_projectiles(surface, projectiles: list[Projectile]) -> None:
