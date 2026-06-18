@@ -76,6 +76,20 @@ python -m unittest discover -s tests
 python -m compileall engine demos game main.py media_capture.py tests
 ```
 
+### Build Splashline Showdown
+
+Install development packaging tools:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+Create a Windows release folder and zip:
+
+```powershell
+.\build_release.ps1
+```
+
 ## Demo Game Concept
 
 The playable integration is **Splashline Showdown**, a 1v1 arcade physics game where players use projectile shots to redirect an air-filled beach ball over a net.
@@ -116,17 +130,33 @@ Features:
 - Rigid-body beach ball and projectile collisions using the shared engine broadphase and impulse response.
 - Randomized wind, drip particles, splash feedback, score/timer HUD, and three powerups.
 - Powerups can be activated by either the ball or a player projectile.
+- Minimal start, pause, how-to-play, powerups, and audio options overlays.
+- Generated sound effects with mute and SFX volume controls.
 
 Controls:
 
+- `Up / Down` or `W / S`: move menu selection
+- `Enter` or `Space`: activate menu selection
+- `Esc`: pause, back, or quit from the start menu
 - `A / D` or `Left / Right`: move active player
 - `Mouse`: aim
 - `Left Click`: shoot
-- `Space`: pause/resume
-- `O`: toggle the top-left debug overlay
-- `H`: help
+- `O`: toggle debug overlay
+- `H`: how to play
 - `R`: restart match
-- `Esc`: quit
+
+Rules:
+
+- Each possession has 3 shots.
+- Ammo does not refill until control changes.
+- Control changes when the ball clearly crosses to the opponent side.
+- If a player runs out of shots and the ball does not cross, a short failsafe timer switches control.
+
+Powerups:
+
+- `Heavy Shot`: next shot is heavier and faster.
+- `Double Shot`: next shot fires two projectiles.
+- `Null Wind`: temporarily cancels wind.
 
 ### Particle Demo
 
@@ -334,6 +364,9 @@ project/
 |-- main.py
 |-- media_capture.py
 |-- requirements.txt
+|-- requirements-dev.txt
+|-- splashline_release.py
+|-- build_release.ps1
 |-- engine/
 |   |-- broadphase.py
 |   |-- collisions.py
@@ -373,7 +406,9 @@ project/
 |   |-- spring_demo.py
 |-- docs/
 |   |-- DEMO_GAME_CONCEPT.md
+|   |-- ITCH_IO_POLISH_PLAN.md
 |   |-- PHYSICS_ENGINE_PIPELINE.md
+|   |-- RELEASE_QA_CHECKLIST.md
 |-- tests/
 |   |-- test_game_physics.py
 |   |-- test_game_state.py
@@ -403,6 +438,8 @@ project/
 
 - [docs/DEMO_GAME_CONCEPT.md](docs/DEMO_GAME_CONCEPT.md): Splashline Showdown concept and gameplay target.
 - [docs/PHYSICS_ENGINE_PIPELINE.md](docs/PHYSICS_ENGINE_PIPELINE.md): engine development pipeline.
+- [docs/ITCH_IO_POLISH_PLAN.md](docs/ITCH_IO_POLISH_PLAN.md): lean itch.io release scope.
+- [docs/RELEASE_QA_CHECKLIST.md](docs/RELEASE_QA_CHECKLIST.md): manual release verification checklist.
 
 ## Next Steps
 
