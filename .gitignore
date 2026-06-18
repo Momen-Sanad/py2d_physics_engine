@@ -1,8 +1,13 @@
 __pycache__/
 *.pyc
 .venv/
+build/
+dist/
+*.spec
 .tmp_pypdf/
 refrences/
+captures/*_20*.gif
+captures/*_20*.png
 docs/First_Phase.pdf
 docs/Second_Phase.pdf
 docs/generate_phase_pdfs.py
