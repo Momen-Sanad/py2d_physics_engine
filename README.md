@@ -467,9 +467,3 @@ project/
 - [docs/PHYSICS_ENGINE_PIPELINE.md](docs/PHYSICS_ENGINE_PIPELINE.md): engine development pipeline.
 - [docs/ITCH_IO_POLISH_PLAN.md](docs/ITCH_IO_POLISH_PLAN.md): lean itch.io release scope.
 - [docs/RELEASE_QA_CHECKLIST.md](docs/RELEASE_QA_CHECKLIST.md): manual release verification checklist.
-
-## Next Steps
-
-1. Capture fresh media for Splashline Showdown and the remaining engine demos.
-2. Add launcher smoke coverage and a lightweight CI workflow.
-3. Continue engine and presentation polish around the completed feature set.
