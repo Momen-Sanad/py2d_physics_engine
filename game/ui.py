@@ -35,6 +35,30 @@ POWERUP_COLORS = {
     PowerupKind.NULL_WIND: (42, 204, 174),
     PowerupKind.STICKY_BALL: (92, 184, 87),
 }
+PLAYER_COLORS = {
+    PlayerId.LEFT: {
+        "shorts": (42, 184, 178),
+        "trim": (255, 229, 105),
+        "skin": (255, 204, 145),
+        "skin_shadow": (224, 153, 101),
+        "hair": (116, 78, 48),
+        "hat": (246, 215, 136),
+        "hat_band": (48, 153, 191),
+        "blaster": (70, 213, 229),
+        "blaster_tip": (255, 229, 105),
+    },
+    PlayerId.RIGHT: {
+        "shorts": (106, 91, 196),
+        "trim": (255, 181, 91),
+        "skin": (242, 177, 122),
+        "skin_shadow": (204, 128, 85),
+        "hair": (80, 57, 43),
+        "hat": (255, 232, 157),
+        "hat_band": (237, 96, 119),
+        "blaster": (255, 126, 164),
+        "blaster_tip": (255, 245, 176),
+    },
+}
 
 
 def draw_arena(surface, arena: Arena) -> None:
@@ -82,23 +106,154 @@ def draw_players(
     import pygame
 
     for player in players:
-        color = (232, 108, 78) if player.player_id is active_player else (73, 98, 118)
-        rect = pygame.Rect(
-            int(player.position.x - config.PLAYER_WIDTH * 0.5),
-            int(player.position.y - config.PLAYER_HEIGHT * 0.5),
-            int(config.PLAYER_WIDTH),
-            int(config.PLAYER_HEIGHT),
+        palette = PLAYER_COLORS[player.player_id]
+        facing = 1 if player.player_id is PlayerId.LEFT else -1
+        center_x = int(round(player.position.x))
+        feet_y = int(round(player.position.y + config.PLAYER_HEIGHT * 0.5))
+        active = player.player_id is active_player
+
+        shadow_rect = pygame.Rect(0, 0, int(config.PLAYER_WIDTH * 1.15), 10)
+        shadow_rect.center = (center_x, feet_y + 3)
+        pygame.draw.ellipse(surface, (119, 151, 143), shadow_rect)
+
+        hip_y = feet_y - 22
+        leg_width = 11
+        for offset in (-10, 10):
+            leg_rect = pygame.Rect(0, 0, leg_width, 27)
+            leg_rect.midtop = (center_x + offset, hip_y)
+            pygame.draw.rect(surface, palette["skin"], leg_rect, border_radius=5)
+            foot_rect = pygame.Rect(0, 0, 18, 7)
+            foot_rect.midleft = (
+                leg_rect.left - 3 if offset < 0 else leg_rect.left,
+                feet_y - 2,
+            )
+            if offset > 0:
+                foot_rect.midright = (leg_rect.right + 3, feet_y - 2)
+            pygame.draw.rect(surface, (80, 155, 187), foot_rect, border_radius=4)
+            pygame.draw.line(
+                surface,
+                (255, 244, 205),
+                foot_rect.midtop,
+                foot_rect.center,
+                2,
+            )
+
+        body_rect = pygame.Rect(0, 0, int(config.PLAYER_WIDTH), 38)
+        body_rect.center = (center_x, feet_y - 42)
+        shorts_rect = pygame.Rect(0, 0, int(config.PLAYER_WIDTH * 0.92), 20)
+        shorts_rect.midtop = (center_x, body_rect.bottom - 2)
+        pygame.draw.rect(surface, palette["shorts"], shorts_rect, border_radius=8)
+        pygame.draw.line(
+            surface,
+            palette["trim"],
+            (shorts_rect.left + 7, shorts_rect.top + 5),
+            (shorts_rect.right - 7, shorts_rect.top + 5),
+            3,
         )
-        pygame.draw.rect(surface, color, rect, border_radius=10)
-        pygame.draw.rect(surface, (255, 255, 255), rect, 2, border_radius=10)
+
+        pygame.draw.rect(surface, palette["skin"], body_rect, border_radius=13)
+        pygame.draw.rect(surface, palette["skin_shadow"], body_rect, 2, border_radius=13)
+        pygame.draw.arc(
+            surface,
+            palette["skin_shadow"],
+            body_rect.inflate(-22, -18),
+            3.35,
+            6.05,
+            2,
+        )
+        pygame.draw.line(
+            surface,
+            (255, 224, 171),
+            (body_rect.left + 12, body_rect.top + 8),
+            (body_rect.left + 18, body_rect.top + 5),
+            2,
+        )
+
+        head_pos = (center_x, body_rect.top - 10)
+        pygame.draw.circle(surface, palette["skin"], head_pos, 15)
+        pygame.draw.circle(surface, palette["hair"], (center_x - 6 * facing, body_rect.top - 20), 7)
+        pygame.draw.circle(surface, palette["hair"], (center_x + 4 * facing, body_rect.top - 22), 6)
+
+        brim_rect = pygame.Rect(0, 0, 42, 9)
+        brim_rect.center = (center_x, body_rect.top - 23)
+        pygame.draw.ellipse(surface, palette["hat"], brim_rect)
+        crown_rect = pygame.Rect(0, 0, 26, 14)
+        crown_rect.midbottom = (center_x, body_rect.top - 21)
+        pygame.draw.ellipse(surface, palette["hat"], crown_rect)
+        pygame.draw.line(
+            surface,
+            palette["hat_band"],
+            (crown_rect.left + 4, crown_rect.centery + 2),
+            (crown_rect.right - 4, crown_rect.centery + 2),
+            3,
+        )
+
+        eye_y = body_rect.top - 11
+        pygame.draw.circle(surface, (67, 55, 47), (center_x - 5, eye_y), 2)
+        pygame.draw.circle(surface, (67, 55, 47), (center_x + 6, eye_y), 2)
+        smile_rect = pygame.Rect(0, 0, 12, 7)
+        smile_rect.center = (center_x + 1 * facing, body_rect.top - 3)
+        pygame.draw.arc(
+            surface,
+            (124, 75, 60),
+            smile_rect,
+            0.15,
+            3.0,
+            2,
+        )
 
         gun_origin = (
             int(player.position.x + (config.PLAYER_GUN_OFFSET_X if player.player_id is PlayerId.LEFT else -config.PLAYER_GUN_OFFSET_X)),
             int(player.position.y + config.PLAYER_GUN_OFFSET_Y),
         )
-        pygame.draw.circle(surface, (255, 255, 255), gun_origin, 5)
-        if player.player_id is active_player:
-            pygame.draw.line(surface, (255, 248, 210), gun_origin, aim_world.to_tuple(), 2)
+        if active:
+            aim_dx = aim_world.x - gun_origin[0]
+            aim_dy = aim_world.y - gun_origin[1]
+        else:
+            aim_dx = float(facing)
+            aim_dy = -0.12
+        aim_length = max((aim_dx * aim_dx + aim_dy * aim_dy) ** 0.5, 0.001)
+        aim_unit = (aim_dx / aim_length, aim_dy / aim_length)
+        side_unit = (-aim_unit[1], aim_unit[0])
+
+        shoulder = (center_x + 18 * facing, body_rect.top + 16)
+        grip = (
+            int(round(gun_origin[0] - aim_unit[0] * 4)),
+            int(round(gun_origin[1] - aim_unit[1] * 4)),
+        )
+        barrel_end = (
+            int(round(gun_origin[0] + aim_unit[0] * 28)),
+            int(round(gun_origin[1] + aim_unit[1] * 28)),
+        )
+        tank_center = (
+            int(round(gun_origin[0] - aim_unit[0] * 7 + side_unit[0] * 6)),
+            int(round(gun_origin[1] - aim_unit[1] * 7 + side_unit[1] * 6)),
+        )
+        handle_end = (
+            int(round(gun_origin[0] - aim_unit[0] * 3 + side_unit[0] * 13)),
+            int(round(gun_origin[1] - aim_unit[1] * 3 + side_unit[1] * 13)),
+        )
+        pygame.draw.line(surface, palette["skin"], shoulder, gun_origin, 7)
+        pygame.draw.line(
+            surface,
+            palette["blaster"],
+            grip,
+            barrel_end,
+            5,
+        )
+        pygame.draw.line(surface, palette["blaster_tip"], gun_origin, handle_end, 4)
+        pygame.draw.circle(surface, palette["blaster"], tank_center, 7)
+        pygame.draw.circle(surface, palette["blaster_tip"], gun_origin, 5)
+        pygame.draw.circle(
+            surface,
+            palette["blaster_tip"],
+            barrel_end,
+            4,
+        )
+
+        if active:
+            pygame.draw.ellipse(surface, (255, 246, 156), body_rect.inflate(18, 54), 3)
+            pygame.draw.line(surface, (255, 248, 210), barrel_end, aim_world.to_tuple(), 2)
 
 
 def draw_ball(surface, ball: Ball) -> None:
@@ -172,7 +327,9 @@ def draw_particles(surface, emitter: DripEmitter) -> None:
     import pygame
 
     for particle in emitter.particles:
-        color = (209, 240, 255) if particle.velocity.y < 0.0 else (110, 196, 235)
+        color = emitter.colors.get(id(particle))
+        if color is None:
+            color = (209, 240, 255) if particle.velocity.y < 0.0 else (110, 196, 235)
         pygame.draw.circle(
             surface,
             color,
@@ -597,7 +754,7 @@ def draw_help(surface, font) -> None:
 
     lines = [
         "A/D or Left/Right: move active player  Mouse: aim  LMB: shoot",
-        "Turn switches when shots run out or the ball crosses the net",
+        "You get 3 shots; control switches when the ball crosses or after the failsafe",
         "Space: pause  O: toggle overlay  H: help  R: restart match  TAB: screenshot  `: GIF  Esc: quit",
     ]
     width = max(font.size(line)[0] for line in lines) + 18

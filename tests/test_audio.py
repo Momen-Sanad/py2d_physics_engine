@@ -6,7 +6,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
-from game.audio import AudioManager, _generate_tone_bytes
+from game.audio import SOUND_SPECS, AudioManager, _generate_tone_bytes
 from game.settings import GameSettings, InputBindings, load_settings, save_settings
 
 
@@ -26,6 +26,9 @@ class AudioTests(unittest.TestCase):
         data = _generate_tone_bytes(440.0, 0.02, 0.25)
 
         self.assertGreater(len(data), 0)
+
+    def test_victory_sound_is_registered(self) -> None:
+        self.assertIn("victory", SOUND_SPECS)
 
 
 class GameSettingsTests(unittest.TestCase):

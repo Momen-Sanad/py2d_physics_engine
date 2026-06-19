@@ -183,6 +183,20 @@ class GamePhysicsTests(unittest.TestCase):
         self.assertEqual(scene.match.turn.shots_left, config.SHOTS_PER_TURN)
         self.assertFalse(scene.match.turn.awaiting_cross)
 
+    def test_match_over_feedback_queues_victory_and_confetti_once(self) -> None:
+        scene = SplashlineScene()
+
+        scene.queue_match_over_audio()
+        first_particle_count = len(scene.emitter.particles)
+        first_events = scene.drain_audio_events()
+        scene.queue_match_over_audio()
+
+        self.assertEqual(first_events, ["match_over", "victory"])
+        self.assertGreater(first_particle_count, 0)
+        self.assertEqual(len(scene.emitter.colors), first_particle_count)
+        self.assertEqual(len(scene.emitter.particles), first_particle_count)
+        self.assertEqual(scene.drain_audio_events(), [])
+
 
 if __name__ == "__main__":
     unittest.main()

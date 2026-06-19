@@ -21,6 +21,7 @@ from .effects import (
     apply_wind_to_bodies,
     emit_ball_drips,
     reset_wind,
+    spawn_confetti_burst,
     spawn_splash_burst,
     step_effect_particles,
     update_drip_intensity,
@@ -91,6 +92,7 @@ START_MENU = [
 PAUSE_MENU = [
     MenuItem("Resume", MenuAction.RESUME),
     MenuItem("Restart Match", MenuAction.RESTART),
+    MenuItem("Main Menu", MenuAction.MAIN_MENU),
     MenuItem("Tutorial", MenuAction.TUTORIAL),
     MenuItem("How To Play", MenuAction.HOW_TO_PLAY),
     MenuItem("Powerups", MenuAction.POWERUPS),
@@ -246,6 +248,7 @@ class SplashlineScene:
         self.right_player.effect_timers.clear()
         self.emitter.particles.clear()
         self.emitter.birth_lifetimes.clear()
+        self.emitter.colors.clear()
         self.emitter.emit_accumulator = 0.0
         self.round_reset_timer = 0.0
         self.powerup_spawn_timer = self.rng.uniform(config.POWERUP_SPAWN_MIN, config.POWERUP_SPAWN_MAX)
@@ -273,6 +276,8 @@ class SplashlineScene:
 
         if not self.match_over_audio_sent:
             self.audio_events.append("match_over")
+            self.audio_events.append("victory")
+            spawn_confetti_burst(self.emitter, self.rng)
             self.match_over_audio_sent = True
 
     def cpu_input(self, dt: float) -> InputState:

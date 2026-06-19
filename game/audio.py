@@ -16,6 +16,7 @@ SOUND_SPECS = {
     "splash": (240.0, 0.16, 0.32),
     "powerup": (880.0, 0.18, 0.28),
     "match_over": (330.0, 0.36, 0.26),
+    "victory": (740.0, 0.48, 0.30),
 }
 SOUND_COOLDOWNS = {
     "menu": 0.04,
@@ -24,6 +25,7 @@ SOUND_COOLDOWNS = {
     "splash": 0.22,
     "powerup": 0.10,
     "match_over": 0.50,
+    "victory": 0.75,
 }
 
 
