@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from main import main
+from game.scene import run
 
 
 if __name__ == "__main__":
-    main(["splashline"])
+    run()
