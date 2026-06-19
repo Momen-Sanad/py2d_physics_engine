@@ -8,11 +8,11 @@ A 1v1 physics arcade game where each player uses a projectile gun to strike an a
 
 ## Core Gameplay Idea
 
-- Match format: 1v1.
+- Match format: local 1v1, with an optional Vs CPU practice mode.
 - Objective: win more rally points than the opponent before time ends or score cap is reached.
 - Interaction rule: players can only influence the ball using shot projectiles.
-- Turn system: active player gets 1-2 shots per turn.
-- Turn switch: switch immediately when the active player uses all shots, or when the ball crosses the net to the opponent side.
+- Turn system: the controlling player gets exactly 3 shots per possession.
+- Turn switch: ammo reaching 0 does not instantly refill; control switches when the ball clearly crosses to the opponent side, or after a short no-ammo failsafe.
 - Anti-memorization: wind is randomized over time and damping can optionally be randomized.
 - Match pacing: random airborne powerups alter tempo and tactical options.
 
@@ -25,9 +25,10 @@ A 1v1 physics arcade game where each player uses a projectile gun to strike an a
 
 ## Player Controls
 
-- `A / D` or `Left / Right`: move horizontally.
+- `A / D` by default: move horizontally.
 - `Mouse`: aim gun direction.
-- `Left Click`: shoot rigid circle projectile.
+- `Left Click` or the bound fire key: shoot rigid circle projectile.
+- Options > Controls can remap movement and keyboard fire.
 - (Optional) `Space`: quick hop/dash.
 
 ## Physics Systems Used
@@ -63,9 +64,11 @@ A 1v1 physics arcade game where each player uses a projectile gun to strike an a
 
 ## Turn + Shot Rules
 
-- Each turn starts with 1 or 2 available shots.
+- Each possession starts with 3 available shots.
 - Active player may shoot until shot count is exhausted.
-- Turn may end early if ball crosses the net to opponent territory.
+- Ammo refills only after control changes.
+- Control changes when the ball crosses the net to opponent territory.
+- If ammo is empty and the ball does not cross, a short failsafe switches control.
 - Cooldown limits spam within a turn.
 - Projectile lifetime is limited.
 - Direct player-ball collision can be disabled to preserve projectile-first gameplay.
@@ -77,7 +80,7 @@ Powerups spawn randomly in the air. Collected powerups apply temporary effects.
 ### Example Powerup Pool
 
 - `Heavy Shot`: higher projectile mass/impulse.
-- `Rapid Fire`: shorter shot cooldown.
+- `Quick Shot`: shorter next-shot cooldown.
 - `Curve Wind`: temporary wind amplification.
 - `Sticky Ball`: temporary increase in ball damping.
 - `Slipstream`: lower movement friction, faster horizontal control.
@@ -90,13 +93,14 @@ Powerups spawn randomly in the air. Collected powerups apply temporary effects.
 ## Match Flow
 
 1. Rally starts with ball at center.
-2. Player 1 turn starts (1-2 shots available).
-3. Turn switches when shots are spent or ball crosses net.
-4. Player 2 turn follows with the same rules.
-5. Rally ends when ball touches water level.
-6. Point is awarded.
-7. Ball and players reset for next rally.
-8. Match ends by timer or score cap.
+2. Player 1 possession starts with 3 shots available.
+3. Ammo can reach 0 without refilling.
+4. Control switches when the ball crosses net or the no-ammo failsafe triggers.
+5. Player 2 possession follows with the same rules.
+6. Rally ends when ball touches water level.
+7. Point is awarded.
+8. Ball and players reset for next rally.
+9. Match ends by timer or score cap.
 
 ## Scoring and Win Conditions
 
@@ -121,11 +125,11 @@ Powerups spawn randomly in the air. Collected powerups apply temporary effects.
 
 - 1v1 playable loop.
 - Horizontal movement, mouse aim, and shooting.
-- Turn system with 1-2 shots per turn.
+- Possession system with 3 shots per control swap.
 - Ball/projectile rigid-body collisions.
 - Random wind.
 - Water-level scoring and rally reset.
-- At least 3 powerups.
+- At least 5 powerups.
 - Timer and final winner state.
 
 ### Stretch Goals

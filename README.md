@@ -128,19 +128,22 @@ Features:
 
 - Turn-based 1v1 projectile duels over a center net.
 - Rigid-body beach ball and projectile collisions using the shared engine broadphase and impulse response.
-- Randomized wind, drip particles, splash feedback, score/timer HUD, and three powerups.
+- Local 1v1 and Vs CPU match modes.
+- Randomized wind, drip particles, splash feedback, score/timer HUD, and five powerups.
 - Powerups can be activated by either the ball or a player projectile.
-- Minimal start, pause, how-to-play, powerups, and audio options overlays.
-- Generated sound effects with mute and SFX volume controls.
+- Minimal start, pause, tutorial, how-to-play, powerups, remapping, and audio options overlays.
+- Generated sound effects with persisted mute and SFX volume controls.
 
 Controls:
 
 - `Up / Down` or `W / S`: move menu selection
 - `Enter` or `Space`: activate menu selection
 - `Esc`: pause, back, or quit from the start menu
-- `A / D` or `Left / Right`: move active player
+- `A / D`: move active player by default
+- `F`: keyboard fire by default
 - `Mouse`: aim
 - `Left Click`: shoot
+- Options > Controls: remap movement and keyboard fire
 - `O`: toggle debug overlay
 - `H`: how to play
 - `R`: restart match
@@ -157,13 +160,15 @@ Powerups:
 
 - `Heavy Shot`: next shot is heavier and faster.
 - `Double Shot`: next shot fires two projectiles.
+- `Quick Shot`: next shot cools down faster.
 - `Null Wind`: temporarily cancels wind.
+- `Sticky Ball`: temporarily adds ball drag.
 
 Itch.io page draft:
 
 > A compact local arcade physics duel where two players fire projectiles, fight the wind, grab powerups, and try to splash a beach ball into the opponent's water.
 
-Use `A/D` or arrow keys to move the controlling player, aim with the mouse, and left click to shoot. Each possession has exactly 3 shots, and control swaps when the ball crosses the net or after the no-ammo failsafe. Heavy Shot, Double Shot, and Null Wind pickups can be collected by the ball or by player projectiles. Built with Python, pygame, and the custom physics systems in this repository; code, generated sound effects, and release media are by the project author.
+Play local 1v1 or practice against the CPU. Use `A/D` by default to move the controlling player, aim with the mouse, and left click or `F` to shoot. Controls, SFX volume, mute, and tutorial progress are saved locally. Each possession has exactly 3 shots, and control swaps when the ball crosses the net or after the no-ammo failsafe. Heavy Shot, Double Shot, Quick Shot, Null Wind, and Sticky Ball pickups can be collected by the ball or by player projectiles. Built with Python, pygame, and the custom physics systems in this repository; code, generated sound effects, and release media are by the project author.
 
 Curated release media:
 

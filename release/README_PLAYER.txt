@@ -1,7 +1,7 @@
 Splashline Showdown
 ===================
 
-Splashline Showdown is a local 1v1 arcade physics duel. Fire projectiles to knock the beach ball over the net, fight the wind, grab powerups, and score when the ball lands in the opponent's water.
+Splashline Showdown is a local arcade physics duel. Play local 1v1 or practice against the CPU, fire projectiles to knock the beach ball over the net, fight the wind, grab powerups, and score when the ball lands in the opponent's water.
 
 How To Run
 ----------
@@ -14,12 +14,20 @@ Controls
 - Up/Down or W/S: move menu selection
 - Enter or Space: activate menu selection
 - Esc: pause, back, or quit from the start menu
-- A/D or Left/Right: move the controlling player
+- A/D: move the controlling player by default
+- F: keyboard fire by default
 - Mouse: aim
 - Left Click: shoot
+- Options > Controls: remap movement and keyboard fire
 - H: open How To Play
 - O: toggle debug overlay
 - R: restart match
+
+Settings
+--------
+
+- SFX volume, mute, keyboard bindings, and tutorial progress are saved locally.
+- The Tutorial menu can start a practice match against the CPU.
 
 Rules
 -----
@@ -36,7 +44,9 @@ Powerups
 
 - Heavy Shot: your next shot is heavier and faster.
 - Double Shot: your next shot fires two projectiles.
+- Quick Shot: your next shot cools down faster.
 - Null Wind: temporarily cancels wind.
+- Sticky Ball: temporarily adds ball drag.
 
 Credits
 -------
