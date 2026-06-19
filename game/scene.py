@@ -55,7 +55,7 @@ from .powerups import (
     tick_pickups,
 )
 from .screens import MenuAction, MenuItem, ScreenMode, clamp_menu_index
-from .settings import GameSettings
+from .settings import load_settings, save_settings
 from .state import MatchPhase, MatchState, PlayerId, award_point, reset_rally, start_match, switch_turn, tick_match_timer
 from .ui import (
     draw_arena,
@@ -332,7 +332,7 @@ def run() -> None:
 
     import pygame
 
-    settings = GameSettings()
+    settings = load_settings()
     pygame.mixer.pre_init(frequency=44100, size=-16, channels=1, buffer=512)
     pygame.init()
     screen = pygame.display.set_mode((config.WINDOW_WIDTH, config.WINDOW_HEIGHT))
@@ -362,6 +362,7 @@ def run() -> None:
     def apply_audio_settings() -> None:
         audio.set_sfx_volume(settings.effective_sfx_volume())
         audio.set_muted(settings.muted)
+        save_settings(settings)
 
     def set_screen(next_mode: ScreenMode) -> None:
         nonlocal screen_mode, selected_index
@@ -528,4 +529,5 @@ def run() -> None:
         capture.update(screen, frame_time)
         pygame.display.flip()
 
+    save_settings(settings)
     pygame.quit()
