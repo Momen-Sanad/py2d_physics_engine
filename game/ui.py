@@ -28,6 +28,11 @@ BEACH_BALL_PANELS = (
     (255, 255, 255),
     (71, 205, 190),
 )
+POWERUP_COLORS = {
+    PowerupKind.HEAVY_SHOT: (236, 72, 82),
+    PowerupKind.DOUBLE_SHOT: (255, 198, 58),
+    PowerupKind.NULL_WIND: (42, 204, 174),
+}
 
 
 def draw_arena(surface, arena: Arena) -> None:
@@ -179,15 +184,23 @@ def draw_powerups(surface, pickups: list[PowerupPickup]) -> None:
 
     import pygame
 
-    color_map = {
-        PowerupKind.HEAVY_SHOT: (245, 96, 96),
-        PowerupKind.DOUBLE_SHOT: (254, 194, 74),
-        PowerupKind.NULL_WIND: (94, 223, 188),
-    }
     for pickup in pickups:
-        color = color_map[pickup.kind]
-        pygame.draw.circle(surface, color, pickup.position.to_tuple(), int(pickup.radius))
-        pygame.draw.circle(surface, (255, 255, 255), pickup.position.to_tuple(), int(pickup.radius), 2)
+        center = pickup.position.to_tuple()
+        radius = int(pickup.radius)
+        color = POWERUP_COLORS[pickup.kind]
+        shadow_center = (center[0] + 2, center[1] + 3)
+        pygame.draw.circle(surface, (20, 36, 52), shadow_center, radius)
+        pygame.draw.circle(surface, color, center, radius)
+        pygame.draw.circle(surface, (255, 255, 255), center, radius, 2)
+        pygame.draw.circle(surface, (31, 45, 64), center, max(4, radius // 3), 2)
+        if pickup.kind is PowerupKind.HEAVY_SHOT:
+            pygame.draw.line(surface, (255, 255, 255), (center[0] - 7, center[1]), (center[0] + 7, center[1]), 3)
+            pygame.draw.line(surface, (255, 255, 255), (center[0], center[1] - 7), (center[0], center[1] + 7), 3)
+        elif pickup.kind is PowerupKind.DOUBLE_SHOT:
+            pygame.draw.circle(surface, (255, 255, 255), (center[0] - 5, center[1]), 4)
+            pygame.draw.circle(surface, (255, 255, 255), (center[0] + 5, center[1]), 4)
+        else:
+            pygame.draw.line(surface, (255, 255, 255), (center[0] - 8, center[1] + 6), (center[0] + 8, center[1] - 6), 3)
 
 
 def draw_hud(
@@ -205,9 +218,11 @@ def draw_hud(
     body_font = fonts["body"]
     small_font = fonts["small"]
 
-    panel = pygame.Surface((config.WINDOW_WIDTH - 32, 92), pygame.SRCALPHA)
-    panel.fill((18, 30, 45, 150))
-    surface.blit(panel, (16, 16))
+    panel_rect = pygame.Rect(16, 16, config.WINDOW_WIDTH - 32, 88)
+    panel = pygame.Surface(panel_rect.size, pygame.SRCALPHA)
+    panel.fill((18, 30, 45, 142))
+    surface.blit(panel, panel_rect)
+    pygame.draw.rect(surface, (238, 248, 255), panel_rect, 1, border_radius=8)
 
     left_score = title_font.render(str(match.left_player.score), True, (255, 255, 255))
     right_score = title_font.render(str(match.right_player.score), True, (255, 255, 255))
@@ -216,27 +231,37 @@ def draw_hud(
         timer_text = "SD"
     timer_surface = title_font.render(timer_text, True, (255, 244, 201))
 
-    surface.blit(left_score, (58, 28))
-    surface.blit(right_score, (config.WINDOW_WIDTH - 82 - right_score.get_width(), 28))
-    surface.blit(timer_surface, (config.WINDOW_WIDTH * 0.5 - timer_surface.get_width() * 0.5, 28))
+    left_label = small_font.render("LEFT", True, (214, 232, 241))
+    right_label = small_font.render("RIGHT", True, (214, 232, 241))
+    surface.blit(left_label, (46, 29))
+    surface.blit(left_score, (46, 49))
+    surface.blit(right_label, (config.WINDOW_WIDTH - 46 - right_label.get_width(), 29))
+    surface.blit(right_score, (config.WINDOW_WIDTH - 46 - right_score.get_width(), 49))
+    surface.blit(timer_surface, (config.WINDOW_WIDTH * 0.5 - timer_surface.get_width() * 0.5, 27))
 
     control_name = "Left" if match.turn.active_player is PlayerId.LEFT else "Right"
-    status = f"Control: {control_name}  Shots: {match.turn.shots_left}  Cooldown: {match.turn.cooldown_remaining:0.2f}s"
+    cooldown = "Ready" if match.turn.cooldown_remaining <= 0.0 else f"{match.turn.cooldown_remaining:0.2f}s"
+    status = f"Control: {control_name}   Shots: {match.turn.shots_left}/{match.shots_per_turn}   {cooldown}"
     phase = "Sudden Death" if match.sudden_death and match.winner is None else match.phase.value.replace("_", " ").title()
     wind_label = _wind_label(active_effects, wind.current_force_x)
 
-    surface.blit(body_font.render(status, True, (246, 247, 249)), (58, 66))
-    phase_surface = body_font.render(phase, True, (245, 231, 145))
-    surface.blit(phase_surface, (config.WINDOW_WIDTH * 0.5 - phase_surface.get_width() * 0.5, 66))
+    surface.blit(body_font.render(status, True, (246, 247, 249)), (140, 64))
+    phase_surface = small_font.render(phase, True, (245, 231, 145))
+    surface.blit(phase_surface, (config.WINDOW_WIDTH * 0.5 - phase_surface.get_width() * 0.5, 68))
     wind_surface = body_font.render(wind_label, True, (221, 246, 255))
-    surface.blit(wind_surface, (config.WINDOW_WIDTH - 72 - wind_surface.get_width(), 66))
+    surface.blit(wind_surface, (config.WINDOW_WIDTH - 146 - wind_surface.get_width(), 64))
 
     active_lines = _effect_lines(match, active_effects)
-    y = 116
+    chip_x = 24
     for line in active_lines:
         text = small_font.render(line, True, (252, 252, 252))
-        surface.blit(text, (26, y))
-        y += text.get_height() + 4
+        chip = pygame.Surface((text.get_width() + 20, 26), pygame.SRCALPHA)
+        chip.fill((18, 30, 45, 155))
+        chip_rect = chip.get_rect(topleft=(chip_x, 110))
+        surface.blit(chip, chip_rect)
+        pygame.draw.rect(surface, (238, 248, 255), chip_rect, 1, border_radius=6)
+        surface.blit(text, (chip_rect.left + 10, chip_rect.top + 4))
+        chip_x += chip_rect.width + 8
 
 
 def draw_game_over(surface, fonts: dict[str, object], match: MatchState) -> None:
@@ -425,50 +450,65 @@ def _draw_menu_overlay(
     import pygame
 
     overlay = pygame.Surface((config.WINDOW_WIDTH, config.WINDOW_HEIGHT), pygame.SRCALPHA)
-    overlay.fill((8, 15, 24, 126))
+    overlay.fill((8, 15, 24, 112))
     surface.blit(overlay, (0, 0))
 
-    panel_width = 560
-    line_height = 28
-    menu_height = len(items) * 34
+    panel_width = 590
+    padding_x = 42
+    line_height = 30
+    menu_row_height = 38
+    menu_height = len(items) * menu_row_height
     text_height = len(lines) * line_height
-    panel_height = 136 + text_height + menu_height
-    panel_height = max(260, panel_height)
+    panel_height = 150 + text_height + menu_height
+    panel_height = max(276, panel_height)
     panel = pygame.Surface((panel_width, panel_height), pygame.SRCALPHA)
-    panel.fill((18, 30, 45, 218))
+    panel.fill((18, 30, 45, 226))
     panel_rect = panel.get_rect(center=(config.WINDOW_WIDTH // 2, config.WINDOW_HEIGHT // 2))
     surface.blit(panel, panel_rect)
-    pygame.draw.rect(surface, (255, 255, 255), panel_rect, 2, border_radius=8)
+    pygame.draw.rect(surface, (238, 248, 255), panel_rect, 2, border_radius=8)
+    pygame.draw.line(
+        surface,
+        (255, 220, 112),
+        (panel_rect.left + padding_x, panel_rect.top + 72),
+        (panel_rect.right - padding_x, panel_rect.top + 72),
+        2,
+    )
 
     title_font = fonts["title"]
     body_font = fonts["body"]
     small_font = fonts["small"]
 
-    y = panel_rect.top + 26
+    y = panel_rect.top + 24
     title_surface = title_font.render(title, True, (255, 246, 204))
     surface.blit(title_surface, (panel_rect.centerx - title_surface.get_width() * 0.5, y))
-    y += title_surface.get_height() + 8
+    y += title_surface.get_height() + 9
 
     if subtitle:
         subtitle_surface = body_font.render(subtitle, True, (221, 246, 255))
         surface.blit(subtitle_surface, (panel_rect.centerx - subtitle_surface.get_width() * 0.5, y))
-        y += subtitle_surface.get_height() + 18
+        y += subtitle_surface.get_height() + 22
     else:
-        y += 14
+        y += 18
 
     for line in lines:
         text_surface = small_font.render(line, True, (246, 247, 249))
-        surface.blit(text_surface, (panel_rect.left + 38, y))
+        surface.blit(text_surface, (panel_rect.left + padding_x, y))
         y += line_height
 
     y += 12
     for index, item in enumerate(items):
         selected = index == selected_index
-        color = (255, 244, 201) if selected else (246, 247, 249)
-        prefix = "> " if selected else "  "
-        item_surface = body_font.render(f"{prefix}{item.label}", True, color)
-        surface.blit(item_surface, (panel_rect.left + 180, y))
-        y += 34
+        item_rect = pygame.Rect(panel_rect.left + 152, y - 4, panel_width - 304, 32)
+        if selected:
+            selected_fill = pygame.Surface(item_rect.size, pygame.SRCALPHA)
+            selected_fill.fill((255, 220, 112, 42))
+            surface.blit(selected_fill, item_rect)
+            pygame.draw.rect(surface, (255, 220, 112), item_rect, 1, border_radius=6)
+            pygame.draw.rect(surface, (255, 220, 112), (item_rect.left, item_rect.top, 4, item_rect.height), border_radius=3)
+        color = (255, 246, 204) if selected else (246, 247, 249)
+        item_surface = body_font.render(item.label, True, color)
+        surface.blit(item_surface, (item_rect.centerx - item_surface.get_width() * 0.5, y))
+        y += menu_row_height
 
 
 def draw_help(surface, font) -> None:
@@ -507,14 +547,16 @@ def _effect_lines(match: MatchState, active_effects: list[ActiveEffect]) -> list
     left_effects = ", ".join(
         f"{name} {remaining:0.1f}s"
         for name, remaining in match.left_player.effect_timers.items()
-    ) or "none"
+    )
     right_effects = ", ".join(
         f"{name} {remaining:0.1f}s"
         for name, remaining in match.right_player.effect_timers.items()
-    ) or "none"
+    )
 
-    lines.append(f"Left effects: {left_effects}")
-    lines.append(f"Right effects: {right_effects}")
+    if left_effects:
+        lines.append(f"L: {left_effects}")
+    if right_effects:
+        lines.append(f"R: {right_effects}")
 
     global_effects = [
         f"{effect.kind.label()} {effect.remaining:0.1f}s"

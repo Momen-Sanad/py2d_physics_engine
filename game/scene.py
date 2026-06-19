@@ -347,9 +347,9 @@ def run() -> None:
     audio.set_muted(settings.muted)
 
     fonts = {
-        "title": pygame.font.Font(None, 42),
-        "body": pygame.font.Font(None, 27),
-        "small": pygame.font.Font(None, 22),
+        "title": pygame.font.Font(None, 48),
+        "body": pygame.font.Font(None, 28),
+        "small": pygame.font.Font(None, 23),
     }
 
     scene = SplashlineScene()
