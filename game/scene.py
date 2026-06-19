@@ -74,12 +74,14 @@ from .ui import (
     draw_powerups_overlay,
     draw_projectiles,
     draw_start_overlay,
+    draw_tutorial_overlay,
 )
 
 
 START_MENU = [
     MenuItem("Local 1v1", MenuAction.START_GAME),
     MenuItem("Vs CPU", MenuAction.START_CPU),
+    MenuItem("Tutorial", MenuAction.TUTORIAL),
     MenuItem("How To Play", MenuAction.HOW_TO_PLAY),
     MenuItem("Powerups", MenuAction.POWERUPS),
     MenuItem("Options", MenuAction.OPTIONS),
@@ -88,6 +90,7 @@ START_MENU = [
 PAUSE_MENU = [
     MenuItem("Resume", MenuAction.RESUME),
     MenuItem("Restart Match", MenuAction.RESTART),
+    MenuItem("Tutorial", MenuAction.TUTORIAL),
     MenuItem("How To Play", MenuAction.HOW_TO_PLAY),
     MenuItem("Powerups", MenuAction.POWERUPS),
     MenuItem("Options", MenuAction.OPTIONS),
@@ -112,6 +115,40 @@ CONTROLS_MENU = [
     MenuItem("Back", MenuAction.BACK),
 ]
 BACK_MENU = [MenuItem("Back", MenuAction.BACK)]
+TUTORIAL_PAGES = [
+    (
+        "Goal And Scoring",
+        [
+            "Knock the beach ball into the opponent water.",
+            "The side where the ball splashes gives up the point.",
+            "First to the score cap wins before time runs out.",
+        ],
+    ),
+    (
+        "Move, Aim, Shoot",
+        [
+            "Move the controlling player with your bound keys.",
+            "Aim with the mouse toward the beach ball.",
+            "Shoot with left click or your bound fire key.",
+        ],
+    ),
+    (
+        "Possession",
+        [
+            "Each possession gets exactly 3 shots.",
+            "Ammo refills only when control changes.",
+            "Control changes when the ball clearly crosses the net.",
+        ],
+    ),
+    (
+        "Wind And Powerups",
+        [
+            "Wind bends shots and the ball, so watch the HUD.",
+            "Pickups activate when hit by the ball or a projectile.",
+            "Practice mode starts a match against the CPU.",
+        ],
+    ),
+]
 
 
 def menu_items_for(screen_mode: ScreenMode) -> list[MenuItem]:
@@ -130,6 +167,19 @@ def menu_items_for(screen_mode: ScreenMode) -> list[MenuItem]:
     if screen_mode in {ScreenMode.HOW_TO_PLAY, ScreenMode.POWERUPS}:
         return BACK_MENU
     return []
+
+
+def tutorial_menu_items(page_index: int) -> list[MenuItem]:
+    """Return tutorial actions for the current page."""
+
+    items: list[MenuItem] = []
+    if page_index < len(TUTORIAL_PAGES) - 1:
+        items.append(MenuItem("Next", MenuAction.TUTORIAL_NEXT))
+    if page_index > 0:
+        items.append(MenuItem("Previous", MenuAction.TUTORIAL_PREVIOUS))
+    items.append(MenuItem("Start Practice", MenuAction.START_PRACTICE))
+    items.append(MenuItem("Back", MenuAction.BACK))
+    return items
 
 
 class SplashlineScene:
@@ -392,6 +442,7 @@ def run() -> None:
     return_mode = ScreenMode.START
     selected_index = 0
     remap_action: MenuAction | None = None
+    tutorial_page = 0
     show_overlay = False
     running = True
 
@@ -417,7 +468,7 @@ def run() -> None:
         save_settings(settings)
 
     def handle_menu_action(action: MenuAction) -> None:
-        nonlocal return_mode, running, scene, remap_action
+        nonlocal return_mode, running, scene, remap_action, tutorial_page
 
         audio.play("menu")
         if action is MenuAction.START_GAME:
@@ -434,6 +485,21 @@ def run() -> None:
         elif action is MenuAction.HOW_TO_PLAY:
             return_mode = screen_mode
             set_screen(ScreenMode.HOW_TO_PLAY)
+        elif action is MenuAction.TUTORIAL:
+            return_mode = screen_mode
+            tutorial_page = 0
+            set_screen(ScreenMode.TUTORIAL)
+        elif action is MenuAction.TUTORIAL_NEXT:
+            tutorial_page = min(len(TUTORIAL_PAGES) - 1, tutorial_page + 1)
+            selected_index = 0
+        elif action is MenuAction.TUTORIAL_PREVIOUS:
+            tutorial_page = max(0, tutorial_page - 1)
+            selected_index = 0
+        elif action is MenuAction.START_PRACTICE:
+            settings.tutorial_seen = True
+            save_settings(settings)
+            scene = SplashlineScene(cpu_enabled=True)
+            set_screen(ScreenMode.PLAYING)
         elif action is MenuAction.POWERUPS:
             return_mode = screen_mode
             set_screen(ScreenMode.POWERUPS)
@@ -515,7 +581,7 @@ def run() -> None:
                     scene = SplashlineScene(cpu_enabled=scene.cpu_enabled)
                     set_screen(ScreenMode.PLAYING)
                 elif screen_mode is not ScreenMode.PLAYING:
-                    items = menu_items_for(screen_mode)
+                    items = tutorial_menu_items(tutorial_page) if screen_mode is ScreenMode.TUTORIAL else menu_items_for(screen_mode)
                     if event.key in (pygame.K_UP, pygame.K_w):
                         selected_index = clamp_menu_index(selected_index - 1, len(items))
                         audio.play("menu")
@@ -575,7 +641,7 @@ def run() -> None:
         draw_ball(screen, scene.ball)
         draw_hud(screen, fonts, scene.match, scene.wind, scene.active_effects)
 
-        items = menu_items_for(screen_mode)
+        items = tutorial_menu_items(tutorial_page) if screen_mode is ScreenMode.TUTORIAL else menu_items_for(screen_mode)
         selected_index = clamp_menu_index(selected_index, len(items))
         if screen_mode is ScreenMode.START:
             draw_start_overlay(screen, fonts, items, selected_index)
@@ -589,6 +655,18 @@ def run() -> None:
             draw_options_overlay(screen, fonts, settings, items, selected_index)
         elif screen_mode is ScreenMode.CONTROLS:
             draw_controls_overlay(screen, fonts, settings, items, selected_index, remap_action)
+        elif screen_mode is ScreenMode.TUTORIAL:
+            title, lines = TUTORIAL_PAGES[tutorial_page]
+            draw_tutorial_overlay(
+                screen,
+                fonts,
+                title,
+                lines,
+                tutorial_page,
+                len(TUTORIAL_PAGES),
+                items,
+                selected_index,
+            )
         elif screen_mode is ScreenMode.GAME_OVER:
             draw_game_over_menu_overlay(screen, fonts, scene.match, items, selected_index)
 

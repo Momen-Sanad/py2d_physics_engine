@@ -452,6 +452,29 @@ def draw_controls_overlay(
     )
 
 
+def draw_tutorial_overlay(
+    surface,
+    fonts: dict[str, object],
+    page_title: str,
+    page_lines: list[str],
+    page_index: int,
+    page_count: int,
+    items: list[MenuItem],
+    selected_index: int,
+) -> None:
+    """Draw one page of the guided tutorial."""
+
+    _draw_menu_overlay(
+        surface,
+        fonts,
+        "Tutorial",
+        f"{page_title}  ({page_index + 1}/{page_count})",
+        page_lines,
+        items,
+        selected_index,
+    )
+
+
 def draw_game_over_menu_overlay(
     surface,
     fonts: dict[str, object],

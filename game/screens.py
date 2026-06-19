@@ -16,6 +16,7 @@ class ScreenMode(str, Enum):
     POWERUPS = "powerups"
     OPTIONS = "options"
     CONTROLS = "controls"
+    TUTORIAL = "tutorial"
     GAME_OVER = "game_over"
 
 
@@ -29,6 +30,10 @@ class MenuAction(str, Enum):
     HOW_TO_PLAY = "how_to_play"
     POWERUPS = "powerups"
     OPTIONS = "options"
+    TUTORIAL = "tutorial"
+    TUTORIAL_NEXT = "tutorial_next"
+    TUTORIAL_PREVIOUS = "tutorial_previous"
+    START_PRACTICE = "start_practice"
     CONTROLS = "controls"
     REMAP_LEFT = "remap_left"
     REMAP_RIGHT = "remap_right"
