@@ -31,7 +31,9 @@ BEACH_BALL_PANELS = (
 POWERUP_COLORS = {
     PowerupKind.HEAVY_SHOT: (236, 72, 82),
     PowerupKind.DOUBLE_SHOT: (255, 198, 58),
+    PowerupKind.QUICK_SHOT: (145, 116, 255),
     PowerupKind.NULL_WIND: (42, 204, 174),
+    PowerupKind.STICKY_BALL: (92, 184, 87),
 }
 
 
@@ -199,8 +201,22 @@ def draw_powerups(surface, pickups: list[PowerupPickup]) -> None:
         elif pickup.kind is PowerupKind.DOUBLE_SHOT:
             pygame.draw.circle(surface, (255, 255, 255), (center[0] - 5, center[1]), 4)
             pygame.draw.circle(surface, (255, 255, 255), (center[0] + 5, center[1]), 4)
-        else:
+        elif pickup.kind is PowerupKind.QUICK_SHOT:
+            pygame.draw.polygon(
+                surface,
+                (255, 255, 255),
+                [
+                    (center[0] - 6, center[1] + 7),
+                    (center[0] + 1, center[1] - 2),
+                    (center[0] - 1, center[1] - 2),
+                    (center[0] + 6, center[1] - 8),
+                ],
+            )
+        elif pickup.kind is PowerupKind.NULL_WIND:
             pygame.draw.line(surface, (255, 255, 255), (center[0] - 8, center[1] + 6), (center[0] + 8, center[1] - 6), 3)
+        else:
+            pygame.draw.circle(surface, (255, 255, 255), center, 5)
+            pygame.draw.circle(surface, (31, 45, 64), center, 2)
 
 
 def draw_hud(
@@ -372,7 +388,9 @@ def draw_powerups_overlay(
         [
             f"{PowerupKind.HEAVY_SHOT.label()}: next shot is heavier and faster.",
             f"{PowerupKind.DOUBLE_SHOT.label()}: next shot fires two projectiles.",
+            f"{PowerupKind.QUICK_SHOT.label()}: next shot cools down faster.",
             f"{PowerupKind.NULL_WIND.label()}: temporarily cancels wind.",
+            f"{PowerupKind.STICKY_BALL.label()}: temporarily adds ball drag.",
             "Ball pickups go to the controlling player.",
             "Projectile pickups go to the projectile owner.",
         ],

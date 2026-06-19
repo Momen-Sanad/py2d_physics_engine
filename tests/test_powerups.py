@@ -6,10 +6,20 @@ import unittest
 
 from engine.math2d import Vec2
 
+from game import config
 from game.entities import build_arena
 from game.input import InputState, try_fire_projectiles
 from game.physics import build_ball, build_projectile
-from game.powerups import ActiveEffect, PowerupPickup, PowerupKind, apply_active_effects, collect_powerups, pop_fire_modifiers
+from game.powerups import (
+    ActiveEffect,
+    PowerupPickup,
+    PowerupKind,
+    apply_active_effects,
+    collect_powerups,
+    expire_effects,
+    pop_fire_modifiers,
+    sticky_ball_drag_bonus,
+)
 from game.scene import SplashlineScene
 from game.state import PlayerId, PlayerState, TurnState
 
@@ -118,6 +128,44 @@ class PowerupTests(unittest.TestCase):
         wind_force = apply_active_effects(effects, 140.0)
 
         self.assertEqual(wind_force, 0.0)
+
+    def test_quick_shot_reduces_next_projectile_cooldown(self) -> None:
+        arena = build_arena()
+        left, right = _players()
+        turn = TurnState(active_player=PlayerId.LEFT, shots_left=2)
+        effects = [ActiveEffect(PowerupKind.QUICK_SHOT, PlayerId.LEFT, 4.0)]
+
+        modifiers = pop_fire_modifiers(effects, PlayerId.LEFT, (left, right))
+        projectiles = try_fire_projectiles(
+            left,
+            InputState(move_axis=0.0, aim_world=Vec2(420.0, 260.0), fire_pressed=True),
+            turn,
+            arena,
+            cooldown_scale=modifiers.cooldown_scale,
+        )
+
+        self.assertEqual(len(projectiles), 1)
+        self.assertLess(turn.cooldown_remaining, config.SHOT_COOLDOWN)
+        self.assertEqual(effects, [])
+
+    def test_sticky_ball_drag_bonus_expires(self) -> None:
+        left, right = _players()
+        effects = [ActiveEffect(PowerupKind.STICKY_BALL, None, 0.1)]
+
+        self.assertGreater(sticky_ball_drag_bonus(effects), 0.0)
+        expire_effects(effects, 0.2, (left, right))
+
+        self.assertEqual(effects, [])
+        self.assertEqual(sticky_ball_drag_bonus(effects), 0.0)
+
+    def test_all_powerups_have_labels(self) -> None:
+        labels = {kind.label() for kind in PowerupKind}
+
+        self.assertIn("Heavy Shot", labels)
+        self.assertIn("Double Shot", labels)
+        self.assertIn("Quick Shot", labels)
+        self.assertIn("Null Wind", labels)
+        self.assertIn("Sticky Ball", labels)
 
     def test_next_shot_powerup_survives_rejected_fire_on_cooldown(self) -> None:
         scene = SplashlineScene()

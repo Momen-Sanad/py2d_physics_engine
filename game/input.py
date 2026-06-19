@@ -137,6 +137,7 @@ def try_fire_projectiles(
     fire_count: int = 1,
     speed_scale: float = 1.0,
     mass_scale: float = 1.0,
+    cooldown_scale: float = 1.0,
     projectile_budget: int = config.MAX_PROJECTILES,
 ) -> list[Projectile]:
     """Spawn one or more projectiles from the active player's gun."""
@@ -164,5 +165,5 @@ def try_fire_projectiles(
             )
         )
 
-    turn.cooldown_remaining = config.SHOT_COOLDOWN
+    turn.cooldown_remaining = config.SHOT_COOLDOWN * cooldown_scale
     return projectiles

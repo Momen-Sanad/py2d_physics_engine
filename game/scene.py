@@ -54,6 +54,7 @@ from .powerups import (
     expire_effects,
     pop_fire_modifiers,
     spawn_powerup,
+    sticky_ball_drag_bonus,
     tick_pickups,
 )
 from .screens import MenuAction, MenuItem, ScreenMode, clamp_menu_index
@@ -333,6 +334,7 @@ class SplashlineScene:
                 fire_count=modifiers.projectile_count,
                 speed_scale=modifiers.speed_scale,
                 mass_scale=modifiers.mass_scale,
+                cooldown_scale=modifiers.cooldown_scale,
                 projectile_budget=projectile_budget,
             )
             if spawned:
@@ -348,7 +350,9 @@ class SplashlineScene:
         self.ball.body.apply_force(
             drag_force(
                 self.ball.body.velocity,
-                config.BALL_DRIP_DRAG_BASE + config.BALL_DRIP_DRAG_BONUS * self.ball.drip_intensity,
+                config.BALL_DRIP_DRAG_BASE
+                + config.BALL_DRIP_DRAG_BONUS * self.ball.drip_intensity
+                + sticky_ball_drag_bonus(self.active_effects),
             )
         )
         apply_wind_to_bodies([self.ball.body, *(projectile.body for projectile in self.projectiles)], effective_wind_x)

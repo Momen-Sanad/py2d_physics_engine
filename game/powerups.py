@@ -18,13 +18,17 @@ class PowerupKind(str, Enum):
 
     HEAVY_SHOT = "heavy_shot"
     DOUBLE_SHOT = "double_shot"
+    QUICK_SHOT = "quick_shot"
     NULL_WIND = "null_wind"
+    STICKY_BALL = "sticky_ball"
 
     def label(self) -> str:
         labels = {
             PowerupKind.HEAVY_SHOT: "Heavy Shot",
             PowerupKind.DOUBLE_SHOT: "Double Shot",
+            PowerupKind.QUICK_SHOT: "Quick Shot",
             PowerupKind.NULL_WIND: "Null Wind",
+            PowerupKind.STICKY_BALL: "Sticky Ball",
         }
         return labels[self]
 
@@ -55,6 +59,7 @@ class FireModifiers:
     projectile_count: int = 1
     speed_scale: float = 1.0
     mass_scale: float = 1.0
+    cooldown_scale: float = 1.0
 
 
 def spawn_powerup(
@@ -77,7 +82,9 @@ def spawn_powerup(
             [
                 PowerupKind.HEAVY_SHOT,
                 PowerupKind.DOUBLE_SHOT,
+                PowerupKind.QUICK_SHOT,
                 PowerupKind.NULL_WIND,
+                PowerupKind.STICKY_BALL,
             ]
         )
         pickup = PowerupPickup(kind=kind, position=Vec2(x, y))
@@ -116,7 +123,7 @@ def collect_powerups(
     for pickup in pickups:
         owner = _pickup_owner(pickup, ball, projectiles, active_player)
         if owner is not None:
-            effect_owner = None if pickup.kind is PowerupKind.NULL_WIND else owner
+            effect_owner = None if pickup.kind in {PowerupKind.NULL_WIND, PowerupKind.STICKY_BALL} else owner
             activate_effect(active_effects, pickup.kind, effect_owner)
             collected.append(pickup.kind)
             continue
@@ -171,7 +178,9 @@ def activate_effect(
     duration = {
         PowerupKind.HEAVY_SHOT: config.HEAVY_SHOT_DURATION,
         PowerupKind.DOUBLE_SHOT: config.DOUBLE_SHOT_DURATION,
+        PowerupKind.QUICK_SHOT: config.QUICK_SHOT_DURATION,
         PowerupKind.NULL_WIND: config.NULL_WIND_DURATION,
+        PowerupKind.STICKY_BALL: config.STICKY_BALL_DURATION,
     }[kind]
 
     for effect in active_effects:
@@ -209,6 +218,14 @@ def apply_active_effects(active_effects: list[ActiveEffect], wind_force_x: float
     return 0.0 if has_effect(active_effects, PowerupKind.NULL_WIND) else wind_force_x
 
 
+def sticky_ball_drag_bonus(active_effects: list[ActiveEffect]) -> float:
+    """Return extra ball drag from active sticky-ball effects."""
+
+    if has_effect(active_effects, PowerupKind.STICKY_BALL):
+        return config.STICKY_BALL_DRAG_BONUS
+    return 0.0
+
+
 def pop_fire_modifiers(
     active_effects: list[ActiveEffect],
     owner: PlayerId,
@@ -225,6 +242,9 @@ def pop_fire_modifiers(
             continue
         if effect.owner is owner and effect.kind is PowerupKind.DOUBLE_SHOT:
             modifiers.projectile_count = max(modifiers.projectile_count, 2)
+            continue
+        if effect.owner is owner and effect.kind is PowerupKind.QUICK_SHOT:
+            modifiers.cooldown_scale = min(modifiers.cooldown_scale, config.QUICK_SHOT_COOLDOWN_SCALE)
             continue
         kept_effects.append(effect)
 
