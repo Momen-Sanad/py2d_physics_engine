@@ -64,6 +64,17 @@ def consume_shot_or_reject(turn: TurnState) -> bool:
     return True
 
 
+def can_fire_projectile(input_state: InputState, turn: TurnState, projectile_budget: int) -> bool:
+    """Return whether a fire attempt can spend ammo and create a projectile."""
+
+    return (
+        input_state.fire_pressed
+        and projectile_budget > 0
+        and turn.cooldown_remaining <= 0.0
+        and turn.shots_left > 0
+    )
+
+
 def check_turn_cross_net(
     active_player: PlayerId,
     previous_side: PlayerId,
@@ -101,10 +112,9 @@ def try_fire_projectiles(
 ) -> list[Projectile]:
     """Spawn one or more projectiles from the active player's gun."""
 
-    if not input_state.fire_pressed or projectile_budget <= 0:
+    if not can_fire_projectile(input_state, turn, projectile_budget):
         return []
-    if not consume_shot_or_reject(turn):
-        return []
+    consume_shot_or_reject(turn)
 
     origin = player_gun_origin(player)
     spread_angles = [0.0]

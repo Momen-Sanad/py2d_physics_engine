@@ -27,6 +27,7 @@ from .effects import (
 from .entities import build_arena, build_players
 from .input import (
     InputState,
+    can_fire_projectile,
     check_turn_cross_net,
     read_input,
     should_sync_turn_to_ball_side,
@@ -236,7 +237,8 @@ class SplashlineScene:
         active_player = self.match.player(self.match.turn.active_player)
         update_player_movement(active_player, input_state, dt)
 
-        if input_state.fire_pressed and len(self.projectiles) < config.MAX_PROJECTILES:
+        projectile_budget = config.MAX_PROJECTILES - len(self.projectiles)
+        if can_fire_projectile(input_state, self.match.turn, projectile_budget):
             modifiers = pop_fire_modifiers(self.active_effects, active_player.player_id, self.match.players())
             spawned = try_fire_projectiles(
                 active_player,
@@ -246,7 +248,7 @@ class SplashlineScene:
                 fire_count=modifiers.projectile_count,
                 speed_scale=modifiers.speed_scale,
                 mass_scale=modifiers.mass_scale,
-                projectile_budget=config.MAX_PROJECTILES - len(self.projectiles),
+                projectile_budget=projectile_budget,
             )
             if spawned:
                 self.allow_turn_side_sync = False

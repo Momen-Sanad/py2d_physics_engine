@@ -10,6 +10,7 @@ from game.entities import build_arena
 from game.input import InputState, try_fire_projectiles
 from game.physics import build_ball, build_projectile
 from game.powerups import ActiveEffect, PowerupPickup, PowerupKind, apply_active_effects, collect_powerups, pop_fire_modifiers
+from game.scene import SplashlineScene
 from game.state import PlayerId, PlayerState, TurnState
 
 
@@ -117,6 +118,34 @@ class PowerupTests(unittest.TestCase):
         wind_force = apply_active_effects(effects, 140.0)
 
         self.assertEqual(wind_force, 0.0)
+
+    def test_next_shot_powerup_survives_rejected_fire_on_cooldown(self) -> None:
+        scene = SplashlineScene()
+        scene.match.turn.cooldown_remaining = 1.0
+        scene.active_effects = [ActiveEffect(PowerupKind.HEAVY_SHOT, PlayerId.LEFT, 4.0)]
+
+        scene.step(
+            InputState(move_axis=0.0, aim_world=Vec2(420.0, 260.0), fire_pressed=True),
+            0.0,
+        )
+
+        self.assertEqual(len(scene.projectiles), 0)
+        self.assertEqual(scene.match.turn.shots_left, 3)
+        self.assertEqual([effect.kind for effect in scene.active_effects], [PowerupKind.HEAVY_SHOT])
+
+    def test_next_shot_powerup_survives_rejected_fire_without_ammo(self) -> None:
+        scene = SplashlineScene()
+        scene.match.turn.shots_left = 0
+        scene.active_effects = [ActiveEffect(PowerupKind.DOUBLE_SHOT, PlayerId.LEFT, 4.0)]
+
+        scene.step(
+            InputState(move_axis=0.0, aim_world=Vec2(420.0, 260.0), fire_pressed=True),
+            0.0,
+        )
+
+        self.assertEqual(len(scene.projectiles), 0)
+        self.assertEqual(scene.match.turn.shots_left, 0)
+        self.assertEqual([effect.kind for effect in scene.active_effects], [PowerupKind.DOUBLE_SHOT])
 
 
 if __name__ == "__main__":
