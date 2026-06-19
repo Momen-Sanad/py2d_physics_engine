@@ -95,6 +95,64 @@ def draw_arena(surface, arena: Arena) -> None:
     )
 
 
+def draw_wind_background(surface, wind: WindState) -> None:
+    """Draw subtle directional wind waves in the sky background."""
+
+    import pygame
+
+    strength = abs(wind.current_force_x)
+    if strength < 2.0:
+        return
+
+    direction = 1.0 if wind.current_force_x > 0.0 else -1.0
+    intensity = min(1.0, strength / max(abs(config.WIND_MIN_FORCE), abs(config.WIND_MAX_FORCE), 1.0))
+    alpha = int(104 + 92 * intensity)
+    spacing = 285.0
+    wave_width = 76.0
+    amplitude = 7.0
+    drift = wind.timer * (34.0 + 54.0 * intensity) * direction
+    sky_height = int(config.WATER_Y - 72.0)
+    overlay = pygame.Surface((config.WINDOW_WIDTH, sky_height), pygame.SRCALPHA)
+    color = (255, 255, 255, alpha)
+    tip_color = (255, 255, 255, min(235, alpha + 32))
+    rows = (138.0, 224.0, 310.0, 396.0, 482.0)
+
+    for row_index, y in enumerate(rows):
+        row_offset = (row_index * 71.0 + drift) % spacing
+        start_x = -spacing + row_offset
+        while start_x < config.WINDOW_WIDTH + spacing:
+            points = []
+            for segment in range(13):
+                t = segment / 12.0
+                x = start_x + t * wave_width
+                points.append((x, y + sin(t * tau) * amplitude))
+
+            if direction < 0.0:
+                points.reverse()
+            pygame.draw.lines(overlay, color, False, points, 4)
+            pygame.draw.aalines(overlay, color, False, points)
+
+            lead_x, lead_y = points[-1]
+            tail = 9.0 * direction
+            pygame.draw.line(
+                overlay,
+                tip_color,
+                (lead_x - tail, lead_y - 4.0),
+                (lead_x, lead_y),
+                3,
+            )
+            pygame.draw.line(
+                overlay,
+                tip_color,
+                (lead_x - tail, lead_y + 4.0),
+                (lead_x, lead_y),
+                3,
+            )
+            start_x += spacing
+
+    surface.blit(overlay, (0, 0))
+
+
 def draw_players(
     surface,
     players: tuple[PlayerState, PlayerState],
@@ -327,9 +385,7 @@ def draw_particles(surface, emitter: DripEmitter) -> None:
     import pygame
 
     for particle in emitter.particles:
-        color = emitter.colors.get(id(particle))
-        if color is None:
-            color = (209, 240, 255) if particle.velocity.y < 0.0 else (110, 196, 235)
+        color = (209, 240, 255) if particle.velocity.y < 0.0 else (110, 196, 235)
         pygame.draw.circle(
             surface,
             color,

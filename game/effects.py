@@ -29,7 +29,6 @@ class DripEmitter:
 
     particles: list[Particle] = field(default_factory=list)
     birth_lifetimes: dict[int, float] = field(default_factory=dict)
-    colors: dict[int, tuple[int, int, int]] = field(default_factory=dict)
     emit_accumulator: float = 0.0
 
 
@@ -145,43 +144,6 @@ def spawn_splash_burst(
         emitter.birth_lifetimes[id(particle)] = particle.lifetime or 0.0
 
 
-def spawn_confetti_burst(
-    emitter: DripEmitter,
-    rng: Random,
-    count: int = config.VICTORY_CONFETTI_COUNT,
-) -> None:
-    """Emit a celebratory confetti burst using the shared particle system."""
-
-    colors = (
-        (255, 87, 99),
-        (255, 207, 64),
-        (73, 196, 255),
-        (91, 217, 132),
-        (178, 121, 255),
-        (255, 142, 72),
-    )
-    for _ in range(count):
-        if len(emitter.particles) >= config.MAX_EFFECT_PARTICLES:
-            return
-
-        side = -1.0 if rng.random() < 0.5 else 1.0
-        origin_x = config.WINDOW_WIDTH * (0.32 if side < 0.0 else 0.68)
-        particle = Particle(
-            position=Vec2(origin_x + rng.uniform(-40.0, 40.0), rng.uniform(42.0, 110.0)),
-            velocity=Vec2(
-                rng.uniform(80.0, 260.0) * -side,
-                rng.uniform(-270.0, -95.0),
-            ),
-            mass=0.8,
-            radius=rng.uniform(2.0, 4.4),
-            lifetime=rng.uniform(1.5, 2.7),
-            restitution=0.15,
-        )
-        emitter.particles.append(particle)
-        emitter.birth_lifetimes[id(particle)] = particle.lifetime or 0.0
-        emitter.colors[id(particle)] = colors[rng.randrange(len(colors))]
-
-
 def step_effect_particles(emitter: DripEmitter, dt: float, wind_force_x: float) -> None:
     """Advance and cull effect particles."""
 
@@ -201,7 +163,6 @@ def step_effect_particles(emitter: DripEmitter, dt: float, wind_force_x: float) 
         expired = particle.lifetime is not None and particle.lifetime <= 0.0
         if expired or particle.position.y > config.WINDOW_HEIGHT + 24.0:
             emitter.birth_lifetimes.pop(id(particle), None)
-            emitter.colors.pop(id(particle), None)
             continue
         emitter.particles[write_index] = particle
         write_index += 1

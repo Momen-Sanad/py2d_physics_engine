@@ -21,7 +21,6 @@ from .effects import (
     apply_wind_to_bodies,
     emit_ball_drips,
     reset_wind,
-    spawn_confetti_burst,
     spawn_splash_burst,
     step_effect_particles,
     update_drip_intensity,
@@ -77,7 +76,9 @@ from .ui import (
     draw_projectiles,
     draw_start_overlay,
     draw_tutorial_overlay,
+    draw_wind_background,
 )
+from .ui_effects import UiConfetti, draw_ui_confetti, spawn_victory_confetti, step_ui_confetti
 
 
 START_MENU = [
@@ -154,6 +155,28 @@ TUTORIAL_PAGES = [
 ]
 
 
+def logical_viewport(display_size: tuple[int, int]) -> tuple[int, int, int, int]:
+    """Return the stretched fullscreen viewport for the fixed logical canvas."""
+
+    display_width, display_height = display_size
+    return (0, 0, max(1, display_width), max(1, display_height))
+
+
+def display_to_logical_mouse(
+    mouse_pos: tuple[int, int],
+    viewport: tuple[int, int, int, int],
+) -> tuple[int, int]:
+    """Map fullscreen display mouse coordinates into logical game coordinates."""
+
+    viewport_x, viewport_y, viewport_width, viewport_height = viewport
+    logical_x = (mouse_pos[0] - viewport_x) * config.WINDOW_WIDTH / viewport_width
+    logical_y = (mouse_pos[1] - viewport_y) * config.WINDOW_HEIGHT / viewport_height
+    return (
+        int(min(max(logical_x, 0.0), config.WINDOW_WIDTH - 1)),
+        int(min(max(logical_y, 0.0), config.WINDOW_HEIGHT - 1)),
+    )
+
+
 def menu_items_for(screen_mode: ScreenMode) -> list[MenuItem]:
     """Return keyboard menu rows for the active overlay."""
 
@@ -213,6 +236,7 @@ class SplashlineScene:
         self.round_reset_timer = 0.0
         self.powerup_spawn_timer = self.rng.uniform(config.POWERUP_SPAWN_MIN, config.POWERUP_SPAWN_MAX)
         self.allow_turn_side_sync = True
+        self.turn_side_sync_guard = 0.0
         self.audio_events: list[str] = []
         self.match_over_audio_sent = False
         self.cpu = CpuController() if cpu_enabled else None
@@ -248,11 +272,11 @@ class SplashlineScene:
         self.right_player.effect_timers.clear()
         self.emitter.particles.clear()
         self.emitter.birth_lifetimes.clear()
-        self.emitter.colors.clear()
         self.emitter.emit_accumulator = 0.0
         self.round_reset_timer = 0.0
         self.powerup_spawn_timer = self.rng.uniform(config.POWERUP_SPAWN_MIN, config.POWERUP_SPAWN_MAX)
         self.allow_turn_side_sync = True
+        self.turn_side_sync_guard = 0.0
         reset_wind(self.wind, self.rng)
         reset_rally(self.match, starting_player=starting_player)
         reset_ball(self.ball, self.arena, self.rng)
@@ -261,8 +285,14 @@ class SplashlineScene:
         """Switch active player control and prevent immediate side resync."""
 
         active_player = switch_turn(self.match)
-        self.allow_turn_side_sync = False
+        self.block_turn_side_sync()
         return active_player
+
+    def block_turn_side_sync(self) -> None:
+        """Briefly suppress side-sync so crossings do not bounce ownership."""
+
+        self.allow_turn_side_sync = False
+        self.turn_side_sync_guard = config.TURN_SIDE_SYNC_GUARD
 
     def drain_audio_events(self) -> list[str]:
         """Return and clear queued gameplay audio events."""
@@ -277,7 +307,6 @@ class SplashlineScene:
         if not self.match_over_audio_sent:
             self.audio_events.append("match_over")
             self.audio_events.append("victory")
-            spawn_confetti_burst(self.emitter, self.rng)
             self.match_over_audio_sent = True
 
     def cpu_input(self, dt: float) -> InputState:
@@ -302,6 +331,10 @@ class SplashlineScene:
         self.match.turn.cooldown_remaining = max(0.0, self.match.turn.cooldown_remaining - dt)
         expire_effects(self.active_effects, dt, self.match.players())
         tick_pickups(self.pickups, dt)
+        if self.turn_side_sync_guard > 0.0:
+            self.turn_side_sync_guard = max(0.0, self.turn_side_sync_guard - dt)
+        if self.turn_side_sync_guard <= 0.0:
+            self.allow_turn_side_sync = True
 
         effective_wind_x = apply_active_effects(self.active_effects, self.wind.current_force_x)
 
@@ -343,7 +376,7 @@ class SplashlineScene:
                 projectile_budget=projectile_budget,
             )
             if spawned:
-                self.allow_turn_side_sync = False
+                self.block_turn_side_sync()
                 self.projectiles.extend(spawned)
                 self.audio_events.append("shot")
 
@@ -429,7 +462,13 @@ def run() -> None:
     settings = load_settings()
     pygame.mixer.pre_init(frequency=44100, size=-16, channels=1, buffer=512)
     pygame.init()
-    screen = pygame.display.set_mode((config.WINDOW_WIDTH, config.WINDOW_HEIGHT))
+    display_info = pygame.display.Info()
+    display_size = (
+        display_info.current_w or config.WINDOW_WIDTH,
+        display_info.current_h or config.WINDOW_HEIGHT,
+    )
+    display = pygame.display.set_mode(display_size, pygame.FULLSCREEN)
+    screen = pygame.Surface((config.WINDOW_WIDTH, config.WINDOW_HEIGHT)).convert()
     pygame.display.set_caption(config.TITLE)
     clock = pygame.time.Clock()
     simulation_clock = SimulationClock(fixed_dt=config.FIXED_DT, max_substeps=config.MAX_SUBSTEPS)
@@ -447,6 +486,7 @@ def run() -> None:
     }
 
     scene = SplashlineScene()
+    ui_confetti = UiConfetti()
     screen_mode = ScreenMode.START
     return_mode = ScreenMode.START
     selected_index = 0
@@ -463,9 +503,14 @@ def run() -> None:
     def set_screen(next_mode: ScreenMode) -> None:
         nonlocal screen_mode, selected_index, remap_action
 
+        previous_mode = screen_mode
         screen_mode = next_mode
         selected_index = 0
         remap_action = None
+        if next_mode is ScreenMode.GAME_OVER and previous_mode is not ScreenMode.GAME_OVER:
+            spawn_victory_confetti(ui_confetti, scene.rng)
+        elif previous_mode is ScreenMode.GAME_OVER and next_mode is not ScreenMode.GAME_OVER:
+            ui_confetti.clear()
 
     def bind_key(action: MenuAction, key_name: str) -> None:
         if action is MenuAction.REMAP_LEFT:
@@ -481,14 +526,17 @@ def run() -> None:
 
         audio.play("menu")
         if action is MenuAction.START_GAME:
+            ui_confetti.clear()
             scene = SplashlineScene()
             set_screen(ScreenMode.PLAYING)
         elif action is MenuAction.START_CPU:
+            ui_confetti.clear()
             scene = SplashlineScene(cpu_enabled=True)
             set_screen(ScreenMode.PLAYING)
         elif action is MenuAction.RESUME:
             set_screen(ScreenMode.PLAYING)
         elif action is MenuAction.RESTART:
+            ui_confetti.clear()
             scene = SplashlineScene(cpu_enabled=scene.cpu_enabled)
             set_screen(ScreenMode.PLAYING)
         elif action is MenuAction.HOW_TO_PLAY:
@@ -507,6 +555,7 @@ def run() -> None:
         elif action is MenuAction.START_PRACTICE:
             settings.tutorial_seen = True
             save_settings(settings)
+            ui_confetti.clear()
             scene = SplashlineScene(cpu_enabled=True)
             set_screen(ScreenMode.PLAYING)
         elif action is MenuAction.POWERUPS:
@@ -524,6 +573,7 @@ def run() -> None:
             settings.reset_bindings()
             save_settings(settings)
         elif action is MenuAction.MAIN_MENU:
+            ui_confetti.clear()
             scene = SplashlineScene()
             set_screen(ScreenMode.START)
         elif action is MenuAction.SFX_VOLUME:
@@ -547,6 +597,7 @@ def run() -> None:
         elif screen_mode is ScreenMode.START:
             running = False
         elif screen_mode is ScreenMode.GAME_OVER:
+            ui_confetti.clear()
             scene = SplashlineScene()
             set_screen(ScreenMode.START)
         else:
@@ -555,8 +606,10 @@ def run() -> None:
     while running:
         frame_time = min(clock.tick(config.RENDER_FPS) / 1000.0, 0.25)
         audio.step(frame_time)
+        step_ui_confetti(ui_confetti, frame_time)
         events = list(pygame.event.get())
-        mouse_pos = pygame.mouse.get_pos()
+        viewport = logical_viewport(display.get_size())
+        mouse_pos = display_to_logical_mouse(pygame.mouse.get_pos(), viewport)
 
         for event in events:
             if event.type == pygame.QUIT:
@@ -587,6 +640,7 @@ def run() -> None:
                 elif event.key == pygame.K_o:
                     show_overlay = not show_overlay
                 elif event.key == pygame.K_r:
+                    ui_confetti.clear()
                     scene = SplashlineScene(cpu_enabled=scene.cpu_enabled)
                     set_screen(ScreenMode.PLAYING)
                 elif screen_mode is not ScreenMode.PLAYING:
@@ -638,6 +692,7 @@ def run() -> None:
                 set_screen(ScreenMode.GAME_OVER)
 
         draw_arena(screen, scene.arena)
+        draw_wind_background(screen, scene.wind)
         draw_powerups(screen, scene.pickups)
         draw_players(
             screen,
@@ -678,6 +733,7 @@ def run() -> None:
             )
         elif screen_mode is ScreenMode.GAME_OVER:
             draw_game_over_menu_overlay(screen, fonts, scene.match, items, selected_index)
+            draw_ui_confetti(screen, ui_confetti)
 
         if show_overlay:
             overlay_lines = [
@@ -688,6 +744,10 @@ def run() -> None:
             overlay.draw(screen, frame_time, config.FIXED_DT, extra_lines=overlay_lines)
 
         capture.update(screen, frame_time)
+        viewport = logical_viewport(display.get_size())
+        display.fill((0, 0, 0))
+        scaled_frame = pygame.transform.smoothscale(screen, (viewport[2], viewport[3]))
+        display.blit(scaled_frame, (viewport[0], viewport[1]))
         pygame.display.flip()
 
     save_settings(settings)

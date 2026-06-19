@@ -187,15 +187,55 @@ class GamePhysicsTests(unittest.TestCase):
         scene = SplashlineScene()
 
         scene.queue_match_over_audio()
-        first_particle_count = len(scene.emitter.particles)
         first_events = scene.drain_audio_events()
         scene.queue_match_over_audio()
 
         self.assertEqual(first_events, ["match_over", "victory"])
-        self.assertGreater(first_particle_count, 0)
-        self.assertEqual(len(scene.emitter.colors), first_particle_count)
-        self.assertEqual(len(scene.emitter.particles), first_particle_count)
+        self.assertEqual(scene.emitter.particles, [])
         self.assertEqual(scene.drain_audio_events(), [])
+
+    def test_cpu_control_syncs_back_when_ball_settles_on_human_side(self) -> None:
+        scene = SplashlineScene(cpu_enabled=True)
+        scene.wind.current_force_x = 0.0
+        scene.ball.body.position.set(scene.arena.net_x - 120.0, scene.arena.serve_y)
+        scene.ball.body.velocity.reset()
+        scene.ball.last_side = PlayerId.LEFT
+        scene.match.turn.active_player = PlayerId.RIGHT
+        scene.match.turn.shots_left = config.SHOTS_PER_TURN
+        scene.allow_turn_side_sync = False
+        scene.turn_side_sync_guard = 0.0
+
+        scene.step(
+            InputState(
+                move_axis=0.0,
+                aim_world=Vec2(scene.arena.net_x, scene.arena.serve_y),
+                fire_pressed=False,
+            ),
+            config.FIXED_DT,
+        )
+
+        self.assertEqual(scene.match.turn.active_player, PlayerId.LEFT)
+
+    def test_side_sync_guard_prevents_immediate_turn_bounce(self) -> None:
+        scene = SplashlineScene(cpu_enabled=True)
+        scene.wind.current_force_x = 0.0
+        scene.ball.body.position.set(scene.arena.net_x - 120.0, scene.arena.serve_y)
+        scene.ball.body.velocity.reset()
+        scene.ball.last_side = PlayerId.LEFT
+        scene.match.turn.active_player = PlayerId.RIGHT
+        scene.allow_turn_side_sync = False
+        scene.turn_side_sync_guard = config.TURN_SIDE_SYNC_GUARD
+
+        scene.step(
+            InputState(
+                move_axis=0.0,
+                aim_world=Vec2(scene.arena.net_x, scene.arena.serve_y),
+                fire_pressed=False,
+            ),
+            config.FIXED_DT,
+        )
+
+        self.assertEqual(scene.match.turn.active_player, PlayerId.RIGHT)
 
 
 if __name__ == "__main__":
