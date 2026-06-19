@@ -151,12 +151,34 @@ Rules:
 - Ammo does not refill until control changes.
 - Control changes when the ball clearly crosses to the opponent side.
 - If a player runs out of shots and the ball does not cross, a short failsafe timer switches control.
+- First to 5 wins, or highest score wins when the timer expires.
 
 Powerups:
 
 - `Heavy Shot`: next shot is heavier and faster.
 - `Double Shot`: next shot fires two projectiles.
 - `Null Wind`: temporarily cancels wind.
+
+Itch.io page draft:
+
+> A compact local arcade physics duel where two players fire projectiles, fight the wind, grab powerups, and try to splash a beach ball into the opponent's water.
+
+Use `A/D` or arrow keys to move the controlling player, aim with the mouse, and left click to shoot. Each possession has exactly 3 shots, and control swaps when the ball crosses the net or after the no-ammo failsafe. Heavy Shot, Double Shot, and Null Wind pickups can be collected by the ball or by player projectiles. Built with Python, pygame, and the custom physics systems in this repository; code, generated sound effects, and release media are by the project author.
+
+Curated release media:
+
+<p>
+  <img src="release/media/splashline_menu.png" alt="Splashline Showdown start menu" width="520" />
+</p>
+<p>
+  <img src="release/media/splashline_gameplay.png" alt="Splashline Showdown gameplay" width="520" />
+</p>
+<p>
+  <img src="release/media/splashline_powerups_or_game_over.png" alt="Splashline Showdown powerups overlay" width="520" />
+</p>
+<p>
+  <img src="release/media/splashline_gameplay.gif" alt="Splashline Showdown gameplay GIF" width="520" />
+</p>
 
 ### Particle Demo
 

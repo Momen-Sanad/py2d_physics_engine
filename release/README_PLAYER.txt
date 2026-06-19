@@ -29,6 +29,7 @@ Rules
 - Control changes when the ball clearly crosses to the opponent side.
 - If the ball does not cross after the controlling player runs out of shots, control switches after a short failsafe timer.
 - Score by making the ball hit the water on the opponent side.
+- First to 5 wins, or highest score wins when the timer expires.
 
 Powerups
 --------
