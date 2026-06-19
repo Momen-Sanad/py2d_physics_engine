@@ -8,10 +8,12 @@ from engine.broadphase import SpatialHashGrid
 from engine.core import SimulationClock
 from engine.debug import PerformanceOverlay
 from engine.forces import drag_force
+from engine.math2d import Vec2
 
 from media_capture import CaptureController
 
 from . import config
+from .ai import CpuController
 from .audio import AudioManager
 from .effects import (
     DripEmitter,
@@ -76,7 +78,8 @@ from .ui import (
 
 
 START_MENU = [
-    MenuItem("Start", MenuAction.START_GAME),
+    MenuItem("Local 1v1", MenuAction.START_GAME),
+    MenuItem("Vs CPU", MenuAction.START_CPU),
     MenuItem("How To Play", MenuAction.HOW_TO_PLAY),
     MenuItem("Powerups", MenuAction.POWERUPS),
     MenuItem("Options", MenuAction.OPTIONS),
@@ -132,7 +135,8 @@ def menu_items_for(screen_mode: ScreenMode) -> list[MenuItem]:
 class SplashlineScene:
     """Owns the full match, entities, effects, and gameplay loop state."""
 
-    def __init__(self) -> None:
+    def __init__(self, cpu_enabled: bool = False) -> None:
+        self.cpu_enabled = cpu_enabled
         self.rng = Random(14)
         self.arena = build_arena()
         self.left_player, self.right_player = build_players(self.arena)
@@ -158,6 +162,8 @@ class SplashlineScene:
         self.allow_turn_side_sync = True
         self.audio_events: list[str] = []
         self.match_over_audio_sent = False
+        self.cpu = CpuController() if cpu_enabled else None
+        self.last_cpu_input = InputState(0.0, Vec2(self.arena.net_x, self.arena.serve_y))
         self.begin_match()
 
     def begin_match(self) -> None:
@@ -172,6 +178,8 @@ class SplashlineScene:
         self.match.rally_index = 0
         self.match.turn.active_player = PlayerId.LEFT
         self.match_over_audio_sent = False
+        if self.cpu is not None:
+            self.cpu.reset()
         reset_wind(self.wind, self.rng)
         self.begin_rally(starting_player=PlayerId.LEFT)
 
@@ -215,6 +223,22 @@ class SplashlineScene:
         if not self.match_over_audio_sent:
             self.audio_events.append("match_over")
             self.match_over_audio_sent = True
+
+    def cpu_input(self, dt: float) -> InputState:
+        """Return CPU input for this fixed step."""
+
+        if self.cpu is None:
+            return InputState(0.0, self.last_cpu_input.aim_world)
+
+        self.last_cpu_input = self.cpu.build_input(
+            self.right_player,
+            self.ball,
+            self.match.turn,
+            self.arena,
+            len(self.projectiles),
+            dt,
+        )
+        return self.last_cpu_input
 
     def step(self, input_state: InputState, dt: float) -> None:
         """Advance gameplay by one fixed update step."""
@@ -399,10 +423,13 @@ def run() -> None:
         if action is MenuAction.START_GAME:
             scene = SplashlineScene()
             set_screen(ScreenMode.PLAYING)
+        elif action is MenuAction.START_CPU:
+            scene = SplashlineScene(cpu_enabled=True)
+            set_screen(ScreenMode.PLAYING)
         elif action is MenuAction.RESUME:
             set_screen(ScreenMode.PLAYING)
         elif action is MenuAction.RESTART:
-            scene = SplashlineScene()
+            scene = SplashlineScene(cpu_enabled=scene.cpu_enabled)
             set_screen(ScreenMode.PLAYING)
         elif action is MenuAction.HOW_TO_PLAY:
             return_mode = screen_mode
@@ -485,7 +512,7 @@ def run() -> None:
                 elif event.key == pygame.K_o:
                     show_overlay = not show_overlay
                 elif event.key == pygame.K_r:
-                    scene = SplashlineScene()
+                    scene = SplashlineScene(cpu_enabled=scene.cpu_enabled)
                     set_screen(ScreenMode.PLAYING)
                 elif screen_mode is not ScreenMode.PLAYING:
                     items = menu_items_for(screen_mode)
@@ -513,16 +540,21 @@ def run() -> None:
 
         keys = pygame.key.get_pressed()
         frame_input = read_input(events, keys, mouse_pos, settings.bindings)
+        aim_world = frame_input.aim_world
 
         if screen_mode is ScreenMode.PLAYING:
             fire_consumed = False
             for _ in range(simulation_clock.consume(frame_time)):
-                step_input = InputState(
-                    move_axis=frame_input.move_axis,
-                    aim_world=frame_input.aim_world,
-                    fire_pressed=frame_input.fire_pressed and not fire_consumed,
-                    hop_pressed=False,
-                )
+                if scene.cpu_enabled and scene.match.turn.active_player is PlayerId.RIGHT:
+                    step_input = scene.cpu_input(config.FIXED_DT)
+                    aim_world = step_input.aim_world
+                else:
+                    step_input = InputState(
+                        move_axis=frame_input.move_axis,
+                        aim_world=frame_input.aim_world,
+                        fire_pressed=frame_input.fire_pressed and not fire_consumed,
+                        hop_pressed=False,
+                    )
                 scene.step(step_input, config.FIXED_DT)
                 for audio_event in scene.drain_audio_events():
                     audio.play(audio_event)
@@ -536,7 +568,7 @@ def run() -> None:
             screen,
             scene.match.players(),
             scene.match.turn.active_player,
-            frame_input.aim_world,
+            aim_world,
         )
         draw_particles(screen, scene.emitter)
         draw_projectiles(screen, scene.projectiles)

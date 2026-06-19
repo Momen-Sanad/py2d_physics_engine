@@ -23,6 +23,7 @@ class MenuAction(str, Enum):
     """Actions triggered by overlay menu items."""
 
     START_GAME = "start_game"
+    START_CPU = "start_cpu"
     RESUME = "resume"
     RESTART = "restart"
     HOW_TO_PLAY = "how_to_play"
