@@ -466,13 +466,6 @@ def _draw_menu_overlay(
     panel_rect = panel.get_rect(center=(config.WINDOW_WIDTH // 2, config.WINDOW_HEIGHT // 2))
     surface.blit(panel, panel_rect)
     pygame.draw.rect(surface, (238, 248, 255), panel_rect, 2, border_radius=8)
-    pygame.draw.line(
-        surface,
-        (255, 220, 112),
-        (panel_rect.left + padding_x, panel_rect.top + 72),
-        (panel_rect.right - padding_x, panel_rect.top + 72),
-        2,
-    )
 
     title_font = fonts["title"]
     body_font = fonts["body"]
@@ -489,6 +482,14 @@ def _draw_menu_overlay(
         y += subtitle_surface.get_height() + 22
     else:
         y += 18
+
+    pygame.draw.line(
+        surface,
+        (255, 220, 112),
+        (panel_rect.left + padding_x, int(y - 12)),
+        (panel_rect.right - padding_x, int(y - 12)),
+        2,
+    )
 
     for line in lines:
         text_surface = small_font.render(line, True, (246, 247, 249))
