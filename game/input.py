@@ -9,6 +9,7 @@ from engine.math2d import Vec2
 from . import config
 from .entities import Arena, Projectile, player_gun_origin
 from .physics import build_projectile
+from .settings import InputBindings
 from .state import PlayerId, PlayerState, TurnState
 
 
@@ -22,19 +23,28 @@ class InputState:
     hop_pressed: bool = False
 
 
-def read_input(events, keys, mouse_pos: tuple[int, int]) -> InputState:
+def read_input(
+    events,
+    keys,
+    mouse_pos: tuple[int, int],
+    bindings: InputBindings | None = None,
+) -> InputState:
     """Convert pygame input into a small engine-agnostic snapshot."""
 
     import pygame
 
+    active_bindings = bindings or InputBindings()
     move_axis = 0.0
-    if keys[pygame.K_a] or keys[pygame.K_LEFT]:
+    if _is_key_down(keys, active_bindings.move_left):
         move_axis -= 1.0
-    if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+    if _is_key_down(keys, active_bindings.move_right):
         move_axis += 1.0
 
     fire_pressed = any(
         event.type == pygame.MOUSEBUTTONDOWN and event.button == 1
+        for event in events
+    ) or any(
+        event.type == pygame.KEYDOWN and event.key == _key_code(active_bindings.fire)
         for event in events
     )
     return InputState(
@@ -43,6 +53,25 @@ def read_input(events, keys, mouse_pos: tuple[int, int]) -> InputState:
         fire_pressed=fire_pressed,
         hop_pressed=False,
     )
+
+
+def _is_key_down(keys, key_name: str) -> bool:
+    key_code = _key_code(key_name)
+    if key_code is None:
+        return False
+    try:
+        return bool(keys[key_code])
+    except (IndexError, KeyError, TypeError):
+        return False
+
+
+def _key_code(key_name: str) -> int | None:
+    import pygame
+
+    try:
+        return pygame.key.key_code(key_name)
+    except (ValueError, TypeError):
+        return None
 
 
 def update_player_movement(player: PlayerState, input_state: InputState, dt: float) -> None:

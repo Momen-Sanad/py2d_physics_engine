@@ -60,6 +60,7 @@ from .state import MatchPhase, MatchState, PlayerId, award_point, reset_rally, s
 from .ui import (
     draw_arena,
     draw_ball,
+    draw_controls_overlay,
     draw_game_over_menu_overlay,
     draw_how_to_play_overlay,
     draw_hud,
@@ -97,6 +98,14 @@ GAME_OVER_MENU = [
 OPTIONS_MENU = [
     MenuItem("SFX Volume", MenuAction.SFX_VOLUME),
     MenuItem("Mute", MenuAction.MUTE),
+    MenuItem("Controls", MenuAction.CONTROLS),
+    MenuItem("Back", MenuAction.BACK),
+]
+CONTROLS_MENU = [
+    MenuItem("Move Left", MenuAction.REMAP_LEFT),
+    MenuItem("Move Right", MenuAction.REMAP_RIGHT),
+    MenuItem("Fire Key", MenuAction.REMAP_FIRE),
+    MenuItem("Reset Defaults", MenuAction.RESET_BINDINGS),
     MenuItem("Back", MenuAction.BACK),
 ]
 BACK_MENU = [MenuItem("Back", MenuAction.BACK)]
@@ -113,6 +122,8 @@ def menu_items_for(screen_mode: ScreenMode) -> list[MenuItem]:
         return GAME_OVER_MENU
     if screen_mode is ScreenMode.OPTIONS:
         return OPTIONS_MENU
+    if screen_mode is ScreenMode.CONTROLS:
+        return CONTROLS_MENU
     if screen_mode in {ScreenMode.HOW_TO_PLAY, ScreenMode.POWERUPS}:
         return BACK_MENU
     return []
@@ -356,6 +367,7 @@ def run() -> None:
     screen_mode = ScreenMode.START
     return_mode = ScreenMode.START
     selected_index = 0
+    remap_action: MenuAction | None = None
     show_overlay = False
     running = True
 
@@ -365,13 +377,23 @@ def run() -> None:
         save_settings(settings)
 
     def set_screen(next_mode: ScreenMode) -> None:
-        nonlocal screen_mode, selected_index
+        nonlocal screen_mode, selected_index, remap_action
 
         screen_mode = next_mode
         selected_index = 0
+        remap_action = None
+
+    def bind_key(action: MenuAction, key_name: str) -> None:
+        if action is MenuAction.REMAP_LEFT:
+            settings.bindings.move_left = key_name
+        elif action is MenuAction.REMAP_RIGHT:
+            settings.bindings.move_right = key_name
+        elif action is MenuAction.REMAP_FIRE:
+            settings.bindings.fire = key_name
+        save_settings(settings)
 
     def handle_menu_action(action: MenuAction) -> None:
-        nonlocal return_mode, running, scene
+        nonlocal return_mode, running, scene, remap_action
 
         audio.play("menu")
         if action is MenuAction.START_GAME:
@@ -391,6 +413,14 @@ def run() -> None:
         elif action is MenuAction.OPTIONS:
             return_mode = screen_mode
             set_screen(ScreenMode.OPTIONS)
+        elif action is MenuAction.CONTROLS:
+            return_mode = screen_mode
+            set_screen(ScreenMode.CONTROLS)
+        elif action in {MenuAction.REMAP_LEFT, MenuAction.REMAP_RIGHT, MenuAction.REMAP_FIRE}:
+            remap_action = action
+        elif action is MenuAction.RESET_BINDINGS:
+            settings.reset_bindings()
+            save_settings(settings)
         elif action is MenuAction.MAIN_MENU:
             scene = SplashlineScene()
             set_screen(ScreenMode.START)
@@ -430,6 +460,16 @@ def run() -> None:
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN:
+                if remap_action is not None:
+                    if event.key == pygame.K_ESCAPE:
+                        remap_action = None
+                    else:
+                        key_name = pygame.key.name(event.key).lower()
+                        if key_name:
+                            bind_key(remap_action, key_name)
+                        remap_action = None
+                    audio.play("menu")
+                    continue
                 if capture.handle_keydown(event, screen):
                     continue
                 if event.key == pygame.K_ESCAPE:
@@ -472,7 +512,7 @@ def run() -> None:
                             handle_menu_action(items[selected_index].action)
 
         keys = pygame.key.get_pressed()
-        frame_input = read_input(events, keys, mouse_pos)
+        frame_input = read_input(events, keys, mouse_pos, settings.bindings)
 
         if screen_mode is ScreenMode.PLAYING:
             fire_consumed = False
@@ -515,6 +555,8 @@ def run() -> None:
             draw_powerups_overlay(screen, fonts, items, selected_index)
         elif screen_mode is ScreenMode.OPTIONS:
             draw_options_overlay(screen, fonts, settings, items, selected_index)
+        elif screen_mode is ScreenMode.CONTROLS:
+            draw_controls_overlay(screen, fonts, settings, items, selected_index, remap_action)
         elif screen_mode is ScreenMode.GAME_OVER:
             draw_game_over_menu_overlay(screen, fonts, scene.match, items, selected_index)
 

@@ -67,6 +67,11 @@ class GameSettings:
 
         return 0.0 if self.muted else self.sfx_volume
 
+    def reset_bindings(self) -> None:
+        """Restore default gameplay keyboard bindings."""
+
+        self.bindings = InputBindings()
+
     def to_dict(self) -> dict[str, object]:
         """Return a JSON-friendly representation."""
 

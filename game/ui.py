@@ -409,6 +409,43 @@ def draw_options_overlay(
             "Up/Down selects an option.",
             "Left/Right adjusts SFX volume.",
             "Enter toggles mute.",
+            "Controls opens keyboard remapping.",
+        ],
+        display_items,
+        selected_index,
+    )
+
+
+def draw_controls_overlay(
+    surface,
+    fonts: dict[str, object],
+    settings: GameSettings,
+    items: list[MenuItem],
+    selected_index: int,
+    remap_action: MenuAction | None,
+) -> None:
+    """Draw keyboard remapping options."""
+
+    display_items: list[MenuItem] = []
+    for item in items:
+        label = item.label
+        if item.action is MenuAction.REMAP_LEFT:
+            label = f"Move Left: {_format_key_name(settings.bindings.move_left)}"
+        elif item.action is MenuAction.REMAP_RIGHT:
+            label = f"Move Right: {_format_key_name(settings.bindings.move_right)}"
+        elif item.action is MenuAction.REMAP_FIRE:
+            label = f"Fire Key: {_format_key_name(settings.bindings.fire)}"
+        display_items.append(MenuItem(label, item.action))
+
+    waiting_text = "Press any key to bind, or Esc to cancel." if remap_action is not None else "Menu keys stay fixed."
+    _draw_menu_overlay(
+        surface,
+        fonts,
+        "Controls",
+        "Keyboard remapping",
+        [
+            waiting_text,
+            "Mouse aim and left click always work.",
         ],
         display_items,
         selected_index,
@@ -540,6 +577,12 @@ def _wind_label(active_effects: list[ActiveEffect], wind_force_x: float) -> str:
         return "Wind: nulled"
     direction = "->" if wind_force_x > 10.0 else "<-" if wind_force_x < -10.0 else "--"
     return f"Wind: {direction} {abs(wind_force_x):.0f}"
+
+
+def _format_key_name(key_name: str) -> str:
+    if len(key_name) == 1:
+        return key_name.upper()
+    return key_name.replace("_", " ").title()
 
 
 def _effect_lines(match: MatchState, active_effects: list[ActiveEffect]) -> list[str]:
